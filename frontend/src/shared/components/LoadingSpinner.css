@@ -1,0 +1,39 @@
+.loading-spinner {
+  min-height: 100svh;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 18px;
+  background: #f8fafc;
+  color: #163661;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+
+.loading-spinner__mark {
+  width: 42px;
+  height: 42px;
+  border: 4px solid #dbe5f1;
+  border-top-color: #315f9d;
+  border-radius: 50%;
+  animation: loading-spinner-turn .8s linear infinite;
+}
+
+.loading-spinner__text {
+  margin: 0;
+  color: #7c8998;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .16em;
+}
+
+@keyframes loading-spinner-turn {
+  to { transform: rotate(360deg); }
+}
+
+/* 모션 민감 사용자를 위해 회전 대신 페이드로 대체한다. */
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner__mark { animation: loading-spinner-fade 1.2s ease-in-out infinite; }
+  @keyframes loading-spinner-fade {
+    50% { opacity: .35; }
+  }
+}

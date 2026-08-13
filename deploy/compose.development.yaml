@@ -1,0 +1,127 @@
+name: ${COMPOSE_PROJECT_NAME:-bodybuilder-dev}
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  frontend:
+    build:
+      context: ../frontend
+      args:
+        VITE_API_BASE_URL: ${BACKEND_PUBLIC_URL:-http://localhost:18080}
+        VITE_ENABLE_MSW: "false"
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
+        VITE_KAKAO_REST_API_KEY: ${VITE_KAKAO_REST_API_KEY:-}
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-5173}:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/healthz || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    logging: *default-logging
+    networks:
+      - app
+
+  backend:
+    build:
+      context: ../backend
+    init: true
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-18080}:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      MYSQL_URL: "jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-bodybuilder}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true&useSSL=false"
+      MYSQL_USER: ${MYSQL_USER:-bodybuilder}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-local_password}
+      VALKEY_HOST: valkey
+      VALKEY_HOST_PORT: "6379"
+      VALKEY_PASSWORD: ${VALKEY_PASSWORD:-local_password}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:5173}
+      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID:-dummy-client-id}
+      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET:-}
+      KAKAO_REDIRECT_URI: ${KAKAO_REDIRECT_URI:-http://localhost:18080/api/v1/auth/kakao/callback}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-dummy-google-client-id}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:18080/api/v1/auth/google/callback}
+      TZ: ${TZ:-Asia/Seoul}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/actuator/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
+    logging: *default-logging
+    networks:
+      - app
+      - data
+
+  mysql:
+    image: mysql:8.4@sha256:c592c15aaf4a1961e15d82eb31ea5987dda862d1c4b1e93424438c0e91dc1f8d
+    ports:
+      - "127.0.0.1:${MYSQL_PORT:-13306}:3306"
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-bodybuilder}
+      MYSQL_USER: ${MYSQL_USER:-bodybuilder}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-local_password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-local_root_password}
+      TZ: ${TZ:-Asia/Seoul}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+    volumes:
+      - mysql_dev_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=\"$$MYSQL_PASSWORD\" mysql --protocol=tcp -h 127.0.0.1 -u\"$$MYSQL_USER\" \"$$MYSQL_DATABASE\" -e 'SELECT 1' >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    logging: *default-logging
+    networks:
+      - data
+
+  valkey:
+    image: valkey/valkey:8.1-alpine@sha256:a038175878d66b9d274fbf8be73c0305e93798b83917647f167e18cef3c71eec
+    ports:
+      - "127.0.0.1:${VALKEY_PORT:-16379}:6379"
+    environment:
+      VALKEY_PASSWORD: ${VALKEY_PASSWORD:-local_password}
+      TZ: ${TZ:-Asia/Seoul}
+    command:
+      - /bin/sh
+      - -ec
+      - exec valkey-server --appendonly yes --appendfsync everysec --requirepass "$$VALKEY_PASSWORD"
+    volumes:
+      - valkey_dev_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "valkey-cli -a \"$$VALKEY_PASSWORD\" ping 2>/dev/null | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    logging: *default-logging
+    networks:
+      - data
+
+networks:
+  app:
+    driver: bridge
+  data:
+    driver: bridge
+
+volumes:
+  mysql_dev_data:
+  valkey_dev_data:

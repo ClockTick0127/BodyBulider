@@ -1,0 +1,89 @@
+.page-sub-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 16px clamp(18px, 4vw, 48px) 0;
+  box-sizing: border-box;
+}
+
+.sub-header__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px 8px 12px;
+  color: #33475f;
+  background: #fff;
+  border: 1px solid #d7e0e9;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .04);
+  transition: .15s;
+  cursor: pointer;
+  width: fit-content;
+  box-sizing: border-box;
+}
+
+.sub-header__back svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.sub-header__back:hover:not(:disabled) {
+  color: var(--red, #ef6e6a);
+  background: #fef2f2;
+  border-color: #fca5a5;
+  transform: translateX(-2px);
+}
+
+.sub-header__back:active:not(:disabled) { transform: translateX(0); }
+
+/* 세그먼트 탭 — 제목 역할을 겸하므로 글씨를 크게 둔다. */
+.sub-header__tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px;
+  background: #e6ecf3;
+  border-radius: 999px;
+}
+
+.sub-header__tab {
+  padding: 9px 26px;
+  color: #6b7c90;
+  text-decoration: none;
+  border-radius: 999px;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  white-space: nowrap;
+  transition: .15s;
+}
+
+.sub-header__tab:hover { color: var(--navy, #163661); }
+
+.sub-header__tab.is-active {
+  color: #fff;
+  background: var(--blue, #315f9d);
+  box-shadow: 0 3px 0 rgba(22, 54, 97, .25);
+}
+
+@media (max-width: 640px) {
+  .page-sub-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding-top: 18px;
+  }
+  .sub-header__back { align-self: flex-start; }
+  .sub-header__tabs { justify-content: center; }
+  .sub-header__tab { flex: 1; padding: 9px 12px; font-size: 16px; text-align: center; }
+}
+.record-page .page-sub-header {
+  border-bottom-color: #a7c5bd;
+}

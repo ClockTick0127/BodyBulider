@@ -1,0 +1,18 @@
+.profile-menu { position: relative; display: inline-flex; }
+.profile-menu__trigger { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; color: #315f9d; background: #eef3f8; border: 1px solid #ccd8e5; border-radius: 50%; font-size: 12px; font-weight: 800; cursor: pointer; }
+.profile-menu__dropdown { position: absolute; top: calc(100% + 10px); z-index: 30; width: 190px; padding: 8px; background: #fff; border: 1px solid #d9e2eb; border-radius: 10px; box-shadow: 8px 10px 0 rgba(44,82,124,.07), 0 18px 40px rgba(23,53,94,.16); animation: profile-menu-in .14s ease-out; }
+.profile-menu__dropdown--right { right: 0; }
+.profile-menu__dropdown--left { left: 0; }
+.profile-menu__nickname { margin: 4px 8px 8px; padding-bottom: 10px; color: #52667e; font-size: 12px; border-bottom: 1px solid #eef2f6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.profile-menu__nickname b { color: #163661; font-weight: 800; }
+.profile-menu__item { display: block; width: 100%; padding: 10px; color: #33475f; background: none; border: 0; border-radius: 7px; text-align: left; text-decoration: none; font-size: 13px; font-weight: 600; transition: .12s; }
+.profile-menu__item:hover, .profile-menu__item:focus-visible { color: #163661; background: #eef3f8; outline: none; }
+.profile-menu__item--danger { color: #d24a46; }
+.profile-menu__item--admin { color: #2767d8; background: #edf3ff; }
+.profile-menu__item--admin:hover, .profile-menu__item--admin:focus-visible { color: #fff; background: #2767d8; }
+.profile-menu__item--danger:hover, .profile-menu__item--danger:focus-visible { color: #fff; background: #ef6e6a; }
+.profile-menu__divider { height: 1px; margin: 6px; background: #eef2f6; }
+
+@keyframes profile-menu-in {
+  from { opacity: 0; transform: translateY(-6px); }
+}

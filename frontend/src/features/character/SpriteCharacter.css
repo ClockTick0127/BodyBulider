@@ -1,0 +1,95 @@
+/**
+ * 캐릭터 스프라이트.
+ *
+ * 프레임이 정사각(256×256)이라 background-size: auto 100% 를 쓰면
+ * "1프레임 폭 = 요소 폭"이 되어 계산이 단순해진다.
+ * --sheet · --frames · --duration 은 전부 TS(SHEETS)에서 인라인으로 들어온다.
+ */
+.sprite-character {
+  --sprite-size: clamp(40px, 7cqw, 76px);
+  /* 216 / 256 — 프레임 안 접지선 위치 */
+  --ground-ratio: 84.375%;
+  --position-x: 0cqw;
+  --position-y: 0cqh;
+  --anchor-y: calc(-1 * var(--ground-ratio) + 1.3cqw);
+
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 5;
+  width: var(--sprite-size);
+  height: var(--sprite-size);
+  pointer-events: none;
+  /* 다크 테마 맵(하수도·강가)에서 캐릭터가 배경에 묻히지 않도록 */
+  filter: drop-shadow(0 2px 2px rgba(24, 32, 51, .35));
+}
+
+.sprite-character__frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-image: var(--sheet);
+  background-repeat: no-repeat;
+  background-size: auto 100%;
+  background-position: 0 center;
+}
+
+/* ── 루프 재생 ─────────────────────────────
+   to = -(프레임수) × 폭, steps(N).
+   steps(N) 기본값(jump-end)은 진행률 0, 1/N … (N-1)/N 을 거치므로
+   오프셋이 정확히 0, -1폭 … -(N-1)폭 이 된다. */
+@keyframes sprite-loop {
+  to { background-position-x: calc(-1 * var(--frames) * var(--sprite-size)); }
+}
+
+.sprite-character__frame {
+  animation: sprite-loop var(--duration) steps(var(--frames)) infinite;
+}
+
+/* ── 1회 재생 후 마지막 프레임 유지 ─────────
+   루프와 공식이 다르다. to = -(프레임수 − 1) × 폭, steps(N, jump-none).
+   jump-none 이 0과 1을 모두 포함한 N개 값을 만들어 마지막 프레임에 정확히 멈춘다.
+   두 레시피를 섞으면 빈 칸에 멈춘다. */
+@keyframes sprite-once {
+  to { background-position-x: calc(-1 * (var(--frames) - 1) * var(--sprite-size)); }
+}
+
+.sprite-character[data-loop="no"] .sprite-character__frame {
+  animation: sprite-once var(--duration) steps(var(--frames), jump-none) 1 forwards;
+}
+
+/* ── 앵커 ───────────────────────────────────
+   지상은 접지선을, 공중은 몸통 중심을 좌표에 맞춘다.
+   1.3cqw = 백엔드 BALL_RADIUS(13) / MAP_SIZE(1000).
+   물리 좌표는 공의 중심이라 반지름만큼 내려야 발이 지면에 닿는다. */
+.sprite-character {
+  transform: translate3d(var(--position-x), var(--position-y), 0) translate(-50%, var(--anchor-y));
+  will-change: transform;
+}
+
+.sprite-character[data-action="fall"],
+.sprite-character[data-action="float"] {
+  --anchor-y: -50%;
+}
+
+/* 미러링은 안쪽 요소에서 — 바깥 transform 을 덮어쓰지 않도록 */
+.sprite-character__frame {
+  transform-origin: 50% var(--ground-ratio);
+}
+
+.sprite-character[data-facing="left"] .sprite-character__frame {
+  transform: scaleX(-1);
+}
+
+/* 정면 원화는 뒤집지 않는다. 좌우 반전 시 광원이 뒤집힌다. */
+.sprite-character[data-action="idle"] .sprite-character__frame,
+.sprite-character[data-action="landing"] .sprite-character__frame,
+.sprite-character[data-action="float"] .sprite-character__frame {
+  transform: none;
+}
+
+/* 캐릭터 애니메이션은 장식이 아니라 게임 상태 정보다.
+   완전히 끄면 정지 이미지가 되므로 속도만 늦춘다. */
+@media (prefers-reduced-motion: reduce) {
+  .sprite-character__frame { animation-duration: 2s !important; }
+}

@@ -1,0 +1,80 @@
+.journey-duck-decor,
+.journey-duck-clouds { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.journey-duck-decor { z-index: 0; }
+.workshop-page > .workshop-layout,
+.record-page > .record-layout { position: relative; z-index: 1; }
+
+.journey-duck-shape {
+  position: absolute;
+  width: 48px;
+  height: 30px;
+  border-radius: 52% 48% 46% 50%;
+  background: #f7d557;
+  opacity: .2;
+  filter: drop-shadow(0 8px 10px rgba(36, 80, 65, .13));
+  animation: journey-duck-float 6s ease-in-out infinite;
+}
+.journey-duck-shape::before { content: ''; position: absolute; right: 3px; top: -11px; width: 19px; height: 19px; border-radius: 50%; background: inherit; }
+.journey-duck-shape::after { content: ''; position: absolute; right: -8px; top: -4px; width: 13px; height: 7px; border-radius: 70% 20% 70% 20%; background: #e8883c; }
+.journey-duck-shape--1 { left: 2.5%; top: 18%; transform: rotate(7deg); }
+.journey-duck-shape--2 { right: 3%; top: 31%; transform: scaleX(-1) rotate(8deg); animation-delay: -2s; }
+.journey-duck-shape--3 { left: 7%; bottom: 13%; width: 35px; height: 22px; animation-delay: -4s; }
+.journey-duck-shape--4 { right: 13%; bottom: 8%; width: 40px; height: 25px; transform: scaleX(-1); animation-delay: -1s; }
+.journey-duck-shape--5 { left: 39%; top: 12%; width: 29px; height: 18px; opacity: .13; animation-delay: -3s; }
+.journey-duck-shape--6 { right: 34%; bottom: 4%; width: 27px; height: 17px; opacity: .14; animation-delay: -5s; }
+
+.journey-duck-walk {
+  --duck-size: clamp(52px, 5.5vw, 76px);
+  position: fixed;
+  z-index: 14;
+  left: 0;
+  width: var(--duck-size);
+  height: var(--duck-size);
+  opacity: 0;
+  filter: drop-shadow(0 4px 3px rgba(25, 60, 50, .28));
+  will-change: transform, opacity;
+}
+.journey-duck-walk--ground { bottom: 37px; }
+.journey-duck-walk--header { top: 22px; }
+.journey-duck-walk > i { display: block; width: 100%; height: 100%; background: var(--duck-move-sheet) 0 center / auto 100% no-repeat; animation: journey-duck-steps .666s steps(8) infinite; }
+.journey-duck-walk--right { animation: journey-duck-cross-right var(--duck-walk-duration) linear forwards; }
+.journey-duck-walk--left { animation: journey-duck-cross-left var(--duck-walk-duration) linear forwards; }
+.journey-duck-walk--left > i { transform: scaleX(-1); }
+
+/* Room list: the character follows the grassy edge immediately above the river. */
+.journey-duck-decor--riverside .journey-duck-clouds { display: none; }
+.journey-duck-decor--riverside .journey-duck-walk--ground { bottom: 88px; }
+.journey-duck-decor--riverside .journey-duck-walk--right { animation-name: journey-duck-river-right; }
+.journey-duck-decor--riverside .journey-duck-walk--left { animation-name: journey-duck-river-left; }
+
+@keyframes journey-duck-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -11px; } }
+@keyframes journey-duck-steps { to { background-position-x: calc(-8 * var(--duck-size)); } }
+@keyframes journey-duck-cross-right { 0% { opacity: 0; transform: translate3d(calc(-1 * var(--duck-size)),0,0); } 7%,91% { opacity: 1; } 100% { opacity: 0; transform: translate3d(calc(100vw + var(--duck-size)),0,0); } }
+@keyframes journey-duck-cross-left { 0% { opacity: 0; transform: translate3d(calc(100vw + var(--duck-size)),0,0); } 7%,91% { opacity: 1; } 100% { opacity: 0; transform: translate3d(calc(-1 * var(--duck-size)),0,0); } }
+@keyframes journey-duck-river-right {
+  0% { opacity: 0; transform: translate3d(calc(-1 * var(--duck-size)), 5px, 0); }
+  7%, 91% { opacity: 1; }
+  28% { transform: translate3d(28vw, -2px, 0); }
+  58% { transform: translate3d(58vw, 4px, 0); }
+  82% { transform: translate3d(82vw, -1px, 0); }
+  100% { opacity: 0; transform: translate3d(calc(100vw + var(--duck-size)), 3px, 0); }
+}
+@keyframes journey-duck-river-left {
+  0% { opacity: 0; transform: translate3d(calc(100vw + var(--duck-size)), 3px, 0); }
+  7%, 91% { opacity: 1; }
+  28% { transform: translate3d(72vw, -1px, 0); }
+  58% { transform: translate3d(42vw, 4px, 0); }
+  82% { transform: translate3d(18vw, -2px, 0); }
+  100% { opacity: 0; transform: translate3d(calc(-1 * var(--duck-size)), 5px, 0); }
+}
+
+@media (max-width: 700px) {
+  .journey-duck-shape--5, .journey-duck-shape--6 { display: none; }
+  .journey-duck-walk--ground { bottom: 40px; }
+  .journey-duck-walk--header { top: 13px; }
+  .journey-duck-decor--riverside .journey-duck-walk--ground { bottom: 84px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .journey-duck-shape { animation: none; }
+  .journey-duck-walk { display: none; }
+}

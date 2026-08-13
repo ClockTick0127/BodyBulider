@@ -1,0 +1,34 @@
+.bgm-toggle-btn {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  color: #315f9d;
+  background: #eef3f8;
+  border: 1px solid #ccd8e5;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.bgm-toggle-btn:hover {
+  background: #e1ebf5;
+  color: #163661;
+  transform: scale(1.05);
+}
+
+.bgm-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+.bgm-toggle-btn.is-off {
+  color: #94a3b8;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.bgm-toggle-btn.is-off:hover {
+  color: #64748b;
+  background: #e2e8f0;
+}

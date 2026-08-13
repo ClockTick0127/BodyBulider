@@ -1,0 +1,59 @@
+/* 마이페이지·랭킹 상단바.
+   좌측 로고 + 우측 프로필 메뉴만 둔다.
+   (뒤로가기와 마이페이지/랭킹 전환은 아래 서브바 PageHeaderWithBack가 담당) */
+.page-topbar {
+  /* 헤더 규격 표준: 데스크톱 76px + 로고 36px / 모바일 64px + 로고 28px.
+     방 목록·로비·인게임·메인 헤더와 높이를 맞춰 페이지 전환 시 흔들림을 없앤다. */
+  height: 76px;
+  position: relative;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 clamp(24px, 5vw, 80px);
+  background: #f8fafc;
+  border-bottom: 3px solid var(--blue, #315f9d);
+  box-shadow: 0 1px 0 #e3e9f0 inset;
+}
+
+.record-page .page-topbar {
+  backdrop-filter: blur(14px);
+}
+
+/* 로고와 우측 그룹이 같은 비율로 늘어나야 중앙 네비가 정확히 가운데 온다. */
+.page-topbar__logo,
+.page-topbar__right {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.page-topbar__logo a {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  transition: .15s;
+}
+
+.page-topbar__logo-img {
+  height: 36px;
+  width: auto;
+  object-fit: contain;
+}
+
+.page-topbar__right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* 중앙 네비(.top-nav) 스타일은 TopNav.css에 있다. 방 목록 헤더와 공유한다. */
+.page-topbar .top-nav {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 480px) {
+  .page-topbar { height: 64px; padding-inline: 18px; }
+  .page-topbar__logo-img { height: 28px; }
+}

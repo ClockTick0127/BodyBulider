@@ -1,0 +1,855 @@
+.room-page {
+    --room-navy: #163661;
+    --room-blue: #315f9d;
+    --room-yellow: #f5d652;
+    --room-red: #ef6e6a;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    color: var(--room-navy);
+    background: #f6f8fb;
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+/* Chapter 02: gather companions at the sewer-side dock */
+.room-page { --navy:#14383a; --blue:#197f80; --yellow:#ffc94a; --red:#ef7d4e; isolation:isolate; background: linear-gradient(180deg,#d8eee7 0%,#edf5e7 62%,#d7e7d2 100%); }
+.room-page::before { content:''; position:absolute; inset:0; z-index:-1; background: radial-gradient(circle at 78% 14%,rgba(255,247,197,.92) 0 5%,transparent 22%), radial-gradient(ellipse at 8% 38%,rgba(113,157,116,.2) 0 10%,transparent 27%), radial-gradient(ellipse at 94% 44%,rgba(83,139,103,.18) 0 12%,transparent 29%); }
+.room-header { background:rgba(247,251,238,.88); border-bottom-color:#86aa8f; backdrop-filter:blur(14px); }
+.room-riverside { position:absolute; inset:76px 0 48px; z-index:0; overflow:hidden; pointer-events:none; }
+.room-riverside > i { position:absolute; display:block; left:-4%; width:108%; }
+.room-riverside__far-bank { bottom:76px; height:54px; background:linear-gradient(176deg,transparent 0 31%,#97bd83 32% 58%,#6e9e6c 59% 100%); filter:drop-shadow(0 5px 3px rgba(38,87,67,.12)); }
+.room-riverside__water { bottom:0; height:88px; background:linear-gradient(178deg,#8ecbc5 0 18%,#72b8b4 19% 68%,#63aaa8 69% 100%); }
+.room-riverside__water::after { content:''; position:absolute; inset:13px 4% 9px; background:linear-gradient(174deg,transparent 0 18%,rgba(255,255,255,.42) 19% 21%,transparent 22% 49%,rgba(220,249,238,.38) 50% 52%,transparent 53% 76%,rgba(255,255,255,.3) 77% 79%,transparent 80%); }
+.room-riverside__near-bank { bottom:-18px; height:54px; background:linear-gradient(177deg,#d7c28b 0 28%,#a9c77d 29% 56%,#77a76d 57% 100%); box-shadow:0 -4px 0 rgba(237,221,169,.7); }
+.room-list-section,.action-card { background:rgba(255,253,235,.9); border-color:#a8c5aa; border-radius:22px; box-shadow:0 7px 0 #98b49b,0 18px 40px rgba(37,77,63,.1); }
+.room-card { background:#f8f4dc; border-color:#c8d8b8; border-radius:16px; }
+.room-card::before { background:#55a58d; }
+.room-card--yellow::before { background:#ffc94a; }
+.room-card--red::before { background:#ef7d4e; }
+.room-card__symbol { background:#d9eee3; color:#197f80; }
+.quick-match-button,.action-submit--blue { background:#197f80; box-shadow:0 5px 0 #105356; }
+.action-submit--yellow { background:#ffc94a; color:#173b3d; box-shadow:0 5px 0 #c69c2c; }
+
+.room-page__grid {
+    position: absolute;
+    inset: 76px 0 48px;
+    opacity: .55;
+    background-image: linear-gradient(rgba(49, 95, 157, .045) 1px, transparent 1px), linear-gradient(90deg, rgba(49, 95, 157, .045) 1px, transparent 1px);
+    background-size: 58px 58px;
+    pointer-events: none;
+}
+
+.room-header {
+    position: relative;
+    z-index: 2;
+    height: 76px;
+    flex-shrink: 0;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 0 clamp(24px, 5vw, 80px);
+    background: #f8fafc;
+    border-bottom: 3px solid var(--room-blue);
+    box-shadow: 0 1px 0 #e3e9f0 inset;
+    box-sizing: border-box;
+}
+
+.room-brand {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    width: fit-content;
+    justify-self: start;
+}
+
+.room-brand__logo {
+    /* 헤더 규격 표준: 데스크톱 76px 헤더 + 로고 36px (AppHeader 등 전 화면 공통) */
+    height: 36px;
+    width: auto;
+    object-fit: contain;
+    display: block;
+}
+
+/* 중앙 자리는 최상위 네비(.top-nav)가 차지한다. 스타일은 TopNav.css에 있다. */
+
+.room-profile {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    color: #78889b;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .12em;
+}
+
+
+.room-shell {
+    position: relative;
+    z-index: 1;
+    width: min(1180px, calc(100% - 48px));
+    margin: 0 auto;
+    padding: 30px 0 40px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.room-shell__heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 33px;
+}
+
+.section-kicker {
+    color: var(--room-red);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .17em;
+}
+
+.room-shell__heading h1 {
+    margin: 8px 0 0;
+    font-size: clamp(28px, 3vw, 42px);
+    line-height: 1.2;
+    letter-spacing: -.065em;
+}
+
+.room-summary {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding-right: 5px;
+}
+
+.room-summary strong {
+    color: var(--room-blue);
+    font: 400 42px/1 'Archivo Black';
+}
+
+.room-summary span {
+    color: #8190a1;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+.room-toast {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: -10px 0 18px;
+    padding: 11px 14px;
+    color: #425d7c;
+    background: #fff8dc;
+    border: 1px solid #ebd981;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.room-toast>span {
+    width: 19px;
+    height: 19px;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    background: var(--room-red);
+    border-radius: 50%;
+    font-size: 10px;
+}
+
+.room-toast button {
+    margin-left: auto;
+    padding: 0 4px;
+    border: 0;
+    background: none;
+    color: #8b7a37;
+    font-size: 18px;
+}
+
+.room-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 350px;
+    gap: 27px;
+    align-items: stretch;
+    flex: 1;
+    min-height: 0;
+}
+
+.room-list-section {
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.list-toolbar {
+    height: 34px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 3px;
+    color: #8a98a8;
+    border-bottom: 2px solid var(--room-navy);
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: .17em;
+}
+
+.list-toolbar__right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.room-refresh {
+    padding: 5px 10px;
+    color: var(--room-blue);
+    background: #eef3f8;
+    border: 1px solid #ccd8e5;
+    border-radius: 20px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    transition: .15s;
+}
+
+.room-refresh:hover:not(:disabled) {
+    color: #fff;
+    background: var(--room-blue);
+    border-color: var(--room-blue);
+}
+
+.room-refresh:disabled {
+    cursor: wait;
+    opacity: .5;
+}
+
+.room-empty {
+    margin: 26px 0;
+    padding: 34px 20px;
+    color: #8a98a8;
+    text-align: center;
+    background: #fff;
+    border: 1px dashed #cfd9e4;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.room-empty--error {
+    color: #a8403c;
+    background: #fbe7e6;
+    border-color: #efb6b3;
+}
+
+.room-empty-visual {
+    min-height: 280px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.room-empty-visual__image {
+    display: block;
+    width: min(100%, 620px);
+    height: auto;
+    object-fit: contain;
+    -webkit-mask-image: radial-gradient(ellipse 74% 70% at center, #000 42%, rgba(0, 0, 0, .92) 58%, transparent 100%);
+    mask-image: radial-gradient(ellipse 74% 70% at center, #000 42%, rgba(0, 0, 0, .92) 58%, transparent 100%);
+}
+
+.room-empty-visual__message {
+    margin: 30px 0 18px;
+    color: #4e6d66;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    text-align: center;
+}
+
+/* 창작마당에서 "이 맵으로 방 만들기"로 들어왔을 때 어떤 맵이 걸리는지 알려 준다. */
+.room-modal__map-tag {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0 0 4px;
+    padding: 9px 12px;
+    color: #33475f;
+    background: #eef3f8;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.room-modal__map-tag span {
+    color: var(--yellow, #f5d652);
+}
+
+.room-modal__map-tag strong {
+    color: var(--blue, #315f9d);
+}
+
+.room-modal__toggle {
+    display: flex !important;
+    align-items: center;
+    gap: 9px;
+    margin: 16px 0 4px;
+    color: #33475f;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.room-modal__toggle input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--room-blue);
+}
+
+.room-list {
+    display: grid;
+    grid-auto-rows: max-content;
+    gap: 13px;
+    margin-top: 13px;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    padding-right: 6px;
+    align-content: start;
+}
+
+.room-card {
+    min-height: 128px;
+    position: relative;
+    display: grid;
+    grid-template-columns: 48px 80px minmax(0, 1fr) 48px;
+    align-items: stretch;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid #dce4ec;
+    border-radius: 5px;
+    box-shadow: 0 4px 0 #d6e0e9;
+    transition: .18s;
+}
+
+.room-card:hover:not(.is-disabled) {
+    transform: translateY(-2px);
+    border-color: #b8caDC;
+    box-shadow: 0 6px 0 #d6e0e9, 0 14px 28px rgba(32, 65, 104, .08);
+}
+
+.room-card::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: var(--room-blue);
+}
+
+.room-card--yellow::before {
+    background: var(--room-yellow);
+}
+
+.room-card--red::before {
+    background: var(--room-red);
+}
+
+.room-card__number {
+    padding-top: 18px;
+    color: #a5b0bc;
+    text-align: center;
+    font: 400 10px/1 'Archivo Black';
+}
+
+.room-card__symbol {
+    width: 68px;
+    height: 76px;
+    align-self: center;
+    display: grid;
+    place-items: center;
+    color: var(--room-blue);
+    background: #edf3fa;
+    border-radius: 4px;
+    font-size: 29px;
+}
+
+.room-card--yellow .room-card__symbol {
+    color: #816d15;
+    background: #fff8d8;
+}
+
+.room-card--red .room-card__symbol {
+    color: #aa4c49;
+    background: #fbe7e6;
+}
+
+.room-card__content {
+    min-width: 0;
+    padding: 18px 16px 14px;
+}
+
+.room-card__title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.room-card h2 {
+    min-width: 0;
+    overflow: hidden;
+    margin: 0;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 15px;
+    letter-spacing: -.04em;
+}
+
+.room-status {
+    flex: none;
+    padding: 4px 8px;
+    color: #3870a6;
+    background: #edf5fc;
+    border-radius: 20px;
+    font-size: 8px;
+    font-weight: 800;
+}
+
+.room-status--playing {
+    color: #fff;
+    background: #8f9aa6;
+}
+
+.room-card p {
+    margin: 7px 0 14px;
+    color: #7d8b9a;
+    font-size: 10px;
+}
+
+.room-card__meta {
+    display: flex;
+    align-items: center;
+    gap: 17px;
+    color: #8592a1;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: .07em;
+}
+
+.room-card__meta span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.room-card__meta svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+}
+
+.room-card__join {
+    width: 100%;
+    color: var(--room-blue);
+    background: #f6f9fc;
+    border: 0;
+    border-left: 1px solid #e2e8ee;
+    font-size: 22px;
+    transition: .15s;
+}
+
+.room-card__join:hover:not(:disabled) {
+    color: #fff;
+    background: var(--room-blue);
+}
+
+.room-card__join:disabled {
+    cursor: not-allowed;
+    color: #afb8c2;
+    background: #f0f2f4;
+}
+
+.room-card.is-disabled {
+    background: #f4f5f6;
+    opacity: .72;
+    box-shadow: none;
+}
+
+.room-actions {
+    display: grid;
+    grid-auto-rows: max-content;
+    gap: 20px;
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+.quick-match-button {
+    width: 100%;
+    height: 46px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding: 0 17px;
+    color: #fff;
+    background: var(--room-navy);
+    border: 0;
+    border-radius: 3px;
+    box-shadow: 0 4px 0 #0d2542;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: .15s;
+}
+
+.quick-match-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background: var(--room-blue);
+    box-shadow: 0 6px 0 var(--room-navy);
+}
+
+.quick-match-button:disabled {
+    cursor: wait;
+    opacity: .65;
+}
+
+.quick-match-button span {
+    font-size: 17px;
+}
+
+.action-card {
+    padding: 24px;
+    background: #fff;
+    border: 1px solid #d6e0ea;
+    border-radius: 5px;
+    box-shadow: 7px 8px 0 #dce5ee, 0 14px 30px rgba(30, 62, 99, .06);
+}
+
+.action-card--join {
+    border-top: 4px solid var(--room-yellow);
+}
+
+.action-card--quick {
+    border-top: 4px solid var(--room-navy);
+}
+
+.action-card__heading {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-bottom: 23px;
+}
+
+.action-icon {
+    width: 37px;
+    height: 37px;
+    display: grid;
+    place-items: center;
+    color: #987c0b;
+    background: #fff4bd;
+    border-radius: 50%;
+    font-size: 18px;
+}
+
+.action-icon--plus {
+    color: var(--room-blue);
+    background: #eaf1f9;
+}
+
+.action-icon--quick {
+    color: #fff;
+    background: var(--room-navy);
+}
+
+.action-card__heading small {
+    display: block;
+    margin-bottom: 4px;
+    color: #9aa5b1;
+    font-size: 7px;
+    font-weight: 800;
+    letter-spacing: .17em;
+}
+
+.action-card__heading h2 {
+    margin: 0;
+    font-size: 17px;
+    letter-spacing: -.04em;
+}
+
+.action-card label {
+    display: flex;
+    justify-content: space-between;
+    margin: 13px 0 6px;
+    color: #53677e;
+    font-size: 9px;
+    font-weight: 800;
+}
+
+.action-card label span {
+    color: #a3adb8;
+    font-size: 7px;
+    letter-spacing: .08em;
+}
+
+.action-card input {
+    width: 100%;
+    height: 43px;
+    padding: 0 13px;
+    color: var(--room-navy);
+    background: #f5f7f9;
+    border: 1px solid #d5dee7;
+    border-radius: 3px;
+    outline: none;
+    font-size: 11px;
+}
+
+.action-card input:focus {
+    background: #fff;
+    border-color: var(--room-blue);
+    box-shadow: 0 0 0 3px rgba(49, 95, 157, .1);
+}
+
+.action-card .code-input {
+    text-align: center;
+    font: 700 17px/1 'Noto Sans KR';
+    letter-spacing: .38em;
+    text-indent: .38em;
+    text-transform: uppercase;
+}
+
+.password-field {
+    position: relative;
+}
+
+.password-field input {
+    padding-right: 40px;
+}
+
+.password-field svg {
+    position: absolute;
+    top: 14px;
+    right: 13px;
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: #8996a5;
+    stroke-width: 1.7;
+}
+
+.privacy-hint {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 10px 0 0;
+    color: #8995a2;
+    font-size: 8px;
+}
+
+.privacy-hint span {
+    width: 6px;
+    height: 6px;
+    background: #68c48e;
+    border-radius: 50%;
+}
+
+.privacy-hint span.is-private {
+    background: var(--room-red);
+}
+
+.action-submit {
+    width: 100%;
+    height: 46px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding: 0 17px;
+    border: 0;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 800;
+    transition: .15s;
+}
+
+.action-submit span {
+    font-size: 17px;
+}
+
+.action-submit:hover:not(:disabled) {
+    transform: translateY(-2px);
+}
+
+.action-submit:disabled {
+    cursor: not-allowed;
+    opacity: .4;
+    box-shadow: none;
+}
+
+.action-submit--yellow {
+    color: var(--room-navy);
+    background: var(--room-yellow);
+    box-shadow: 0 4px 0 #b99d26;
+}
+
+.action-submit--blue {
+    color: #fff;
+    background: var(--room-blue);
+    box-shadow: 0 4px 0 var(--room-navy);
+}
+
+.room-footer {
+    position: relative;
+    z-index: 1;
+    height: 48px;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 clamp(24px, 5vw, 80px);
+    color: #a2acb8;
+    background: rgba(255, 255, 255, .7);
+    border-top: 1px solid #dfe6ee;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: .12em;
+}
+
+@media (max-width:900px) {
+    .room-layout {
+        grid-template-columns: 1fr
+    }
+
+    .room-actions {
+        grid-template-columns: 1fr 1fr
+    }
+
+    /* 예전에는 중앙의 고정 라벨을 좁은 화면에서 숨겼다.
+       지금 그 자리는 창작마당 진입 경로(.top-nav)라 숨기면 갈 방법이 없어진다.
+       3열을 유지하고 TopNav.css의 축소 규칙(영문 라벨 접기)에 맡긴다. */
+    .room-header {
+        padding-inline: 18px
+    }
+}
+
+@media (max-width:650px) {
+    .room-shell {
+        width: min(100% - 28px, 1180px);
+        padding-top: 34px
+    }
+
+    .room-shell__heading {
+        align-items: flex-start
+    }
+
+    .room-summary {
+        display: none
+    }
+
+    .room-shell__heading h1 {
+        font-size: 28px
+    }
+
+    .room-actions {
+        grid-template-columns: 1fr
+    }
+
+    .room-card {
+        grid-template-columns: 34px 58px minmax(0, 1fr) 38px;
+        min-height: 116px
+    }
+
+    .room-card__symbol {
+        width: 49px;
+        height: 62px
+    }
+
+    .room-card__content {
+        padding: 16px 10px
+    }
+
+    .room-card__title {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 5px
+    }
+
+    .room-card h2 {
+        width: 100%;
+        font-size: 13px
+    }
+
+    .room-card p {
+        display: none
+    }
+
+    .room-card__meta {
+        margin-top: 10px;
+        gap: 9px
+    }
+
+    .room-card__meta>span:last-child {
+        display: none
+    }
+
+    .room-header {
+        height: 64px;
+        padding: 0 18px
+    }
+
+    /* 헤더가 64px로 줄어들 때 로고도 28px로 맞춘다. (전 화면 모바일 공통 규격) */
+    .room-brand__logo {
+        height: 28px
+    }
+
+    .room-page__grid {
+        inset-block-start: 64px
+    }
+
+    .room-brand>span:last-child {
+        display: none
+    }
+
+    .room-footer>span:nth-child(2) {
+        display: none
+    }
+}
+
+/* Riverside journey scenery */
+.room-page__grid {
+    opacity: .48;
+    background-image:
+        radial-gradient(ellipse at 6% 76%, rgba(49, 111, 75, .23) 0 7%, transparent 7.5%),
+        radial-gradient(ellipse at 96% 72%, rgba(49, 111, 75, .2) 0 9%, transparent 9.5%),
+        radial-gradient(ellipse at 22% 20%, rgba(255,255,255,.42) 0 8%, transparent 9%);
+    background-size: auto;
+    background-repeat: no-repeat;
+}
+
+.room-shell__heading h1 { color: #173d3c; text-shadow: 0 2px 0 rgba(255,255,255,.7); }
+.section-kicker { color: #d5653d; }
+.room-summary strong { color: #1b7d79; }
+.room-list-section { padding: 0 18px 18px; }
+.list-toolbar { color: #648078; border-bottom-color: #477d70; }
+.room-card__number { color: #6f877e; }
+.room-status { color: #176e6d; background: #dceee2; }
+.room-card__join { color: #176e6d; background: #eef5df; border-left-color: #c8d8b8; }
+.room-card__join:hover:not(:disabled) { background: #1f8581; }
+.action-card__heading small { color: #70847d; }
+.action-card label { color: #4e6d66; }
+.action-card input { color: #173d3c; background: #f7f5e5; border-color: #b9cdb1; }
+.room-footer { color: #678079; background: rgba(247, 251, 238, .82); border-top-color: #aac0a8; }
+
+@media (max-width:650px) {
+    .room-list-section { padding-inline: 12px; }
+}

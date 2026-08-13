@@ -1,0 +1,43 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: ${MYSQL_URL:jdbc:mysql://localhost:3306/bodybuilder?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true&useSSL=false}
+    username: ${MYSQL_USER:bodybuilder}
+    password: ${MYSQL_PASSWORD:local_password}
+  data:
+    redis:
+      host: ${VALKEY_HOST:localhost}
+      port: ${VALKEY_HOST_PORT:6379}
+      password: ${VALKEY_PASSWORD:}
+
+server:
+  servlet:
+    session:
+      cookie:
+        secure: false
+
+app:
+  cors:
+    allowed-origins:
+      - ${CORS_ALLOWED_ORIGIN:http://localhost:5173}
+    allowed-methods:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+      - OPTIONS
+    allowed-headers:
+      - "*"
+
+kakao:
+  client-id: ${KAKAO_CLIENT_ID:dummy-client-id}
+  client-secret: ${KAKAO_CLIENT_SECRET:}
+  redirect-uri: ${KAKAO_REDIRECT_URI:http://localhost:8080/api/v1/auth/kakao/callback}
+
+google:
+  client-id: ${GOOGLE_CLIENT_ID:dummy-google-client-id}
+  client-secret: ${GOOGLE_CLIENT_SECRET:}
+  redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8080/api/v1/auth/google/callback}

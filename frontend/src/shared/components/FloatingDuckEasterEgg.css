@@ -1,0 +1,41 @@
+.floating-duck-easter-egg {
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  width: var(--duck-size);
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.18;
+  transform: translate3d(calc(-1 * var(--duck-size) - 5vw), 0, 0);
+  will-change: transform;
+}
+
+.floating-duck-easter-egg img {
+  display: block;
+  width: 100%;
+  height: auto;
+  animation: duck-float-and-spin 3.2s ease-in-out infinite;
+}
+
+.floating-duck-easter-egg.is-physics-active img {
+  animation: none;
+}
+
+@keyframes duck-float-and-spin {
+  0% {
+    transform: translateY(-10px) rotate(-12deg);
+  }
+  50% {
+    transform: translateY(14px) rotate(168deg);
+  }
+  100% {
+    transform: translateY(-10px) rotate(348deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floating-duck-easter-egg {
+    display: none;
+  }
+}

@@ -1,0 +1,52 @@
+spring:
+  application:
+    name: bodybuilder
+  flyway:
+    # 벤더 전용 마이그레이션(V4)은 db/vendor/{vendor} 아래 둔다.
+    # Flyway는 location을 재귀 스캔하므로 db/migration 하위에 두면 mysql/h2 두 V4가
+    # 동시에 잡혀 "Found more than one migration with version 4"로 기동에 실패한다.
+    locations: classpath:db/migration,classpath:db/vendor/{vendor}
+  profiles:
+    default: dev
+  session:
+    store-type: redis
+    redis:
+      namespace: spring:session
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+server:
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      timeout: 1d
+      cookie:
+        http-only: true
+        same-site: lax
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+kakao:
+  token-uri: ${KAKAO_TOKEN_URI:https://kauth.kakao.com/oauth/token}
+  user-info-uri: ${KAKAO_USER_INFO_URI:https://kapi.kakao.com/v2/user/me}
+
+google:
+  token-uri: ${GOOGLE_TOKEN_URI:https://oauth2.googleapis.com/token}
+  user-info-uri: ${GOOGLE_USER_INFO_URI:https://www.googleapis.com/oauth2/v3/userinfo}
+
+
+game:
+  physics:
+    engine: dyn4j # legacy | dyn4j

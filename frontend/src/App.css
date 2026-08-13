@@ -1,0 +1,4 @@
+@import './styles/globals.css';
+@import './pages/main/MainPage.css';
+@import './pages/rooms/RoomListPage.css';
+@import './features/records/records.css';

@@ -1,0 +1,21 @@
+# Local and production environment files can contain credentials.
+**/.env
+**/.env.*
+!**/.env.example
+
+# CI/local dependency caches.
+.npm/
+.gradle-ci/
+.gradle-test/
+
+# VS Code Java extension build output.
+backend/bin/
+
+# Local run scripts can contain credentials. Never commit them.
+bootrun.bat
+**/bootrun.bat
+*.local.bat
+
+# 캐릭터 스프라이트 QA 어니언 스킨은 빌드 스크립트가 다시 만들 수 있는 검수용 산출물이다.
+# (시트 자체는 앱이 import 하므로 커밋한다)
+frontend/src/assets/character/qa/

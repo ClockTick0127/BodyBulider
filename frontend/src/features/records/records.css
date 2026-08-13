@@ -1,0 +1,841 @@
+/* ── 마이페이지 · 랭킹 공통 ─────────────────────────── */
+.record-page {
+  --navy: #163661;
+  --blue: #315f9d;
+  --yellow: #f5d652;
+  --red: #ef6e6a;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--navy);
+  background: #eef1f5;
+  font-family: 'Noto Sans KR', sans-serif;
+  box-sizing: border-box;
+}
+
+/* 상단바(.page-topbar)는 AppHeader.css, 서브바는 PageHeaderWithBack.css에 있다. */
+.icon-button {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: #5b6b7f;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  transition: .15s;
+}
+
+.icon-button:hover {
+  color: var(--navy);
+  background: #e7edf4;
+}
+
+.record-layout {
+  max-width: 1180px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 34px clamp(20px, 4vw, 48px) 70px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 34px;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  .record-layout {
+    overflow-y: auto;
+  }
+}
+
+.record-layout > section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.record-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 22px;
+  font-size: 27px;
+  font-weight: 800;
+  letter-spacing: -.03em;
+}
+
+.record-heading__icon {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: var(--blue);
+  border-radius: 6px;
+}
+
+.record-card {
+  padding: 26px 28px 28px;
+  background: #fff;
+  border: 1px solid #cfe0f2;
+  border-radius: 12px;
+  box-shadow: 0 6px 0 #dbe6f2, 0 18px 40px rgba(35, 64, 98, .08);
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 auto;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.profile-card {
+  height: max-content;
+}
+
+.record-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.record-caption {
+  margin: 0 0 20px;
+  color: #7c8b9c;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.record-card__head h2 {
+  margin: 0;
+  color: var(--blue);
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+
+.ranking-badge {
+  display: inline-block;
+  padding: 8px 18px;
+  color: var(--navy);
+  background: var(--yellow);
+  border: 0;
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  box-shadow: 0 4px 0 #d9b83a;
+}
+
+a.ranking-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 0 #d9b83a;
+}
+
+.record-list {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.record-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  background: #f5f8fb;
+  border-radius: 9px;
+}
+
+.stage-chip {
+  min-width: 46px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: var(--navy);
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.record-row__name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.record-row__value {
+  text-align: right;
+}
+
+.record-row__value b {
+  display: block;
+  color: var(--blue);
+  font: 400 23px/1.1 'Archivo Black', sans-serif;
+  letter-spacing: -.02em;
+}
+
+.record-row__value small {
+  display: block;
+  margin-top: 4px;
+  color: #78889b;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.record-row__value--empty b {
+  color: #b4c0cd;
+}
+
+.record-loading,
+.record-error {
+  margin: 24px 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #78889b;
+}
+
+.record-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  color: var(--red);
+}
+
+.record-retry {
+  padding: 8px 16px;
+  color: var(--blue);
+  background: #e9f0f8;
+  border: 1px solid #c5d7ea;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  transition: .15s;
+}
+
+.record-retry:hover {
+  background: #dbe7f4;
+}
+
+/* ── 기록 이력 · 라운드 상세 ─────────────────────────── */
+/* 클릭 가능한 기록 행. 목록 안에서 button이 li 전체를 채우도록 한다. */
+.record-row--action {
+  width: 100%;
+  text-align: left;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: .15s;
+}
+
+.record-row--action:hover:not(.is-disabled) {
+  background: #eaf2fb;
+  border-color: #c5d7ea;
+  transform: translateY(-1px);
+}
+
+.record-row--action:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.record-row--action.is-disabled {
+  cursor: not-allowed;
+  opacity: .62;
+}
+
+.record-row__chevron {
+  width: 12px;
+  color: #9aa9ba;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.record-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 18px;
+  padding: 8px 15px 8px 11px;
+  color: #33475f;
+  background: #f1f5f9;
+  border: 1px solid #d7e0e9;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  transition: .15s;
+}
+
+.record-back:hover {
+  color: var(--navy);
+  background: #e4ecf4;
+  border-color: #b9cbe0;
+  transform: translateX(-2px);
+}
+
+.record-back span {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.record-total {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 20px;
+  padding: 16px 20px;
+  background: #eef4fb;
+  border-radius: 9px;
+}
+
+.record-total span {
+  color: #5b6b7f;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.record-total b {
+  color: var(--blue);
+  font: 400 25px/1 'Archivo Black', sans-serif;
+  letter-spacing: -.02em;
+}
+
+.stage-chip--round {
+  background: var(--blue);
+}
+
+.profile-card {
+  height: max-content;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 10px 12px 0 rgba(44, 82, 124, .07), 0 18px 40px rgba(35, 64, 98, .08);
+}
+
+.profile-card__inner {
+  padding: 26px 26px 30px;
+  border: 1px solid #dce4ec;
+  border-radius: 8px;
+}
+
+.profile-card__nickname {
+  margin: 0 0 14px;
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.profile-card__rank {
+  margin: 0;
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -.02em;
+}
+
+.profile-card__rank b {
+  display: block;
+  font-size: 31px;
+  font-weight: 800;
+}
+
+.profile-card__stages {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #dce4ec;
+}
+
+.profile-card__stages>p {
+  margin: 0 0 10px;
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.profile-card__stages ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.profile-card__stages li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 3px 8px;
+  padding: 9px 11px;
+  background: #eef4fb;
+  border-radius: 8px;
+}
+
+.profile-card__stages span {
+  font-size: 12.5px;
+  font-weight: 800;
+}
+
+.profile-card__stages small {
+  color: #78889b;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+/* ── 랭킹 전용 ─────────────────────────── */
+.rank-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.rank-tab {
+  padding: 10px 19px;
+  color: #52667e;
+  background: #fff;
+  border: 1px solid #d7e0e9;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  transition: .15s;
+}
+
+.rank-tab:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.rank-tab.is-active {
+  color: #fff;
+  background: var(--navy);
+  border-color: var(--navy);
+  box-shadow: 0 4px 0 rgba(22, 54, 97, .25);
+}
+
+.board-summary {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.board-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  background: #f5f8fb;
+  border-radius: 9px;
+}
+
+.board-card__chip {
+  width: 78px;
+  height: 78px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  color: var(--navy);
+  background: #dcebfb;
+  border-radius: 10px;
+  font: 400 17px/1 'Archivo Black', sans-serif;
+}
+
+.board-card__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.board-card__info strong {
+  display: block;
+  color: var(--blue);
+  font-size: 16.5px;
+  font-weight: 700;
+}
+
+.board-card__info small {
+  display: block;
+  margin-top: 7px;
+  color: #6e7f92;
+  font-size: 12.5px;
+}
+
+.board-card__go {
+  padding: 13px 26px;
+  color: var(--blue);
+  background: #e3edf8;
+  border: 0;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  transition: .15s;
+}
+
+.board-card__go:hover {
+  background: #d3e3f5;
+  transform: translateY(-1px);
+}
+
+.board-list {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.board-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  background: #f5f8fb;
+  border-radius: 9px;
+}
+
+.board-row__rank {
+  min-width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  color: #52667e;
+  background: #e6ecf3;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.board-row--top .board-row__rank {
+  color: var(--navy);
+  background: var(--yellow);
+  box-shadow: 0 2px 0 #d9b83a;
+}
+
+.board-row__nickname {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.board-row__time {
+  color: var(--blue);
+  font: 400 17px/1 'Archivo Black', sans-serif;
+}
+
+@media (max-width: 900px) {
+  .record-layout {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+    align-items: start;
+  }
+
+  .profile-card {
+    order: -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .record-card {
+    padding: 20px 18px;
+  }
+
+  .board-card {
+    flex-wrap: wrap;
+  }
+
+  .board-card__chip {
+    width: 56px;
+    height: 56px;
+    font-size: 14px;
+  }
+
+  .board-card__go {
+    width: 100%;
+  }
+
+  /* 좁은 화면에서 기록 행이 겹치지 않도록 시간/설명을 아래로 흘린다. */
+  .record-card__head {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .record-row {
+    flex-wrap: wrap;
+    gap: 10px 12px;
+    padding: 14px 16px;
+  }
+
+  .record-row__name {
+    flex: 1 1 100%;
+    order: 2;
+    font-size: 13px;
+  }
+
+  .record-row__value {
+    order: 3;
+    margin-left: auto;
+  }
+
+  .record-row__value b {
+    font-size: 20px;
+  }
+
+  .record-row__chevron {
+    order: 4;
+    align-self: center;
+  }
+
+  .record-total {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .record-error {
+    gap: 8px;
+  }
+
+  .record-retry {
+    width: 100%;
+  }
+}
+
+/* ── 스테이지 역대 기록 모달 ─────────────────────────
+   명세서의 다크 팔레트(#1e1e24 계열) 대신 이 앱의 라이트 팔레트를 쓴다.
+   구조·클래스명·Slide-in 애니메이션 규격은 명세서를 그대로 따른다. */
+.stage-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(11, 31, 56, .55);
+  backdrop-filter: blur(4px);
+  animation: stage-modal-fade .18s ease-out;
+}
+
+.stage-modal-content {
+  width: 90%;
+  max-width: 760px;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid #d9e2eb;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(10, 31, 56, .28);
+  animation: stage-modal-rise .22s ease-out;
+}
+
+.stage-modal-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 22px;
+  border-bottom: 1px solid #e6edf5;
+}
+
+.stage-modal-head h2 {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  color: var(--blue);
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+
+.stage-modal-close {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: #7c8998;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  font-size: 22px;
+  line-height: 1;
+  transition: .15s;
+}
+
+.stage-modal-close:hover {
+  color: var(--navy);
+  background: #eef3f8;
+}
+
+.stage-modal-body {
+  position: relative;
+  display: flex;
+  min-height: 380px;
+  overflow: hidden;
+}
+
+.modal-history-list {
+  flex: 1;
+  min-width: 0;
+  padding: 16px;
+  overflow-y: auto;
+  max-height: 60vh;
+}
+
+/* 우측 Slide-in 라운드 상세 패널 */
+.modal-round-detail {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 50%;
+  padding: 16px;
+  background: #f4f8fd;
+  border-left: 1px solid #dbe6f2;
+  box-shadow: -4px 0 12px rgba(23, 53, 94, .1);
+  overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform .3s cubic-bezier(.16, 1, .3, 1);
+}
+
+.modal-round-detail.is-open {
+  transform: translateX(0);
+}
+
+.modal-round-detail__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.modal-round-detail__head h3 {
+  flex: 1;
+  margin: 0;
+  color: var(--navy);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+/* 모바일에서만 노출되는 '날짜 목록으로' 버튼 */
+.modal-round-back {
+  display: none;
+}
+
+.modal-empty {
+  margin: 24px 4px;
+  color: #78889b;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+@keyframes stage-modal-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes stage-modal-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .stage-modal-backdrop,
+  .stage-modal-content {
+    animation: none;
+  }
+
+  .modal-round-detail {
+    transition: none;
+  }
+}
+
+/* 모바일: 라운드 패널이 전체를 덮고, 버튼으로 날짜 목록에 복귀한다. */
+@media (max-width: 768px) {
+  .stage-modal-content {
+    width: 100%;
+    max-width: none;
+  }
+
+  .modal-round-detail {
+    width: 100%;
+    border-left: 0;
+  }
+
+  .modal-round-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 14px 7px 10px;
+    color: #33475f;
+    background: #fff;
+    border: 1px solid #d7e0e9;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+}
+
+/* Journey log & hall of fame */
+.record-page { --navy:#14383a; --blue:#197f80; --yellow:#ffc94a; --red:#ef7d4e; isolation:isolate; background:linear-gradient(180deg,#cce9df 0%,#eaf4df 58%,#c7dcbf 100%); }
+.record-page::before { content:''; position:absolute; inset:0; z-index:-1; opacity:.58; background:radial-gradient(ellipse at 85% 8%,rgba(255,255,255,.72),transparent 25%),linear-gradient(165deg,transparent 55%,rgba(34,115,107,.14) 56% 64%,transparent 65%); }
+.record-layout::before { content:'JOURNEY ARCHIVE  ·  엄마 오리에게 가는 길'; position:absolute; top:8px; left:clamp(20px,4vw,48px); color:#56766c; font-size:10px; font-weight:900; letter-spacing:.12em; }
+.record-layout { position:relative; }
+.record-card,.profile-card { background:#fff; border-color:#a9c4a5; border-radius:22px; box-shadow:0 7px 0 #98b49b,0 18px 40px rgba(37,77,63,.1); }
+.profile-card__inner { border-color:#c7d8b9; border-radius:14px; }
+.record-row,.board-card,.board-row,.profile-card__stages li { background:#ecf9e3; }
+.stage-chip,.rank-tab.is-active { background:#197f80; }
+.board-card__chip { background:#d6eadf; color:#176c6d; }
+.board-row--top .board-row__rank,.ranking-badge { background:#ffc94a; }
+.board-card__go { color:#176c6d; background:#d6eadf; }
+
+.record-page { position: relative; }
+.record-heading { color: #173d3c; }
+.record-heading__icon { background: #1f8581; box-shadow: 0 3px 0 #115a59; }
+.record-caption, .profile-card__stages small { color: #637b72; }
+.record-row, .board-card, .board-row, .profile-card__stages li { border: 1px solid #d1ddbd; }
+.record-row--action:hover:not(.is-disabled) { background: #e2efd5; border-color: #8fb695; }
+.record-row__value b, .board-row__time, .board-card__info strong { color: #176e6d; }
+.profile-card__rank b { color: #176e6d; }
+.rank-tab { border-color: #b9cdb1; }
+.rank-tab.is-active { border-color: #1f8581; box-shadow: 0 4px 0 #115a59; }
+.stage-modal-content { border-color: #a9c4a5; }
+.stage-modal-head { border-bottom-color: #c9d8b8; }
+.modal-round-detail { background: #fdfff8; border-left-color: #c9d8b8; }
+
+@media (max-width: 900px) {
+  .record-layout::before { right: 76px; }
+}

@@ -1,0 +1,176 @@
+{
+  "generatedBy": "scripts/build_character_sprites.mjs",
+  "frameSize": 256,
+  "groundY": 216,
+  "airY": 128,
+  "states": {
+    "idle": {
+      "file": "duck_idle.png",
+      "mode": "ground",
+      "sourceFrames": 6,
+      "sheetFrames": 10,
+      "sequence": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        4,
+        3,
+        2,
+        1
+      ],
+      "fps": 8,
+      "loop": true,
+      "mirrorable": false,
+      "size": [
+        2560,
+        256
+      ]
+    },
+    "move": {
+      "file": "duck_move.png",
+      "mode": "ground",
+      "sourceFrames": 8,
+      "sheetFrames": 8,
+      "sequence": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "fps": 12,
+      "loop": true,
+      "mirrorable": true,
+      "size": [
+        2048,
+        256
+      ]
+    },
+    "landing": {
+      "file": "duck_landing.png",
+      "mode": "ground",
+      "sourceFrames": 6,
+      "sheetFrames": 6,
+      "sequence": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "fps": 16,
+      "loop": false,
+      "mirrorable": false,
+      "size": [
+        1536,
+        256
+      ]
+    },
+    "fall": {
+      "file": "duck_fall.png",
+      "mode": "air",
+      "sourceFrames": 6,
+      "sheetFrames": 10,
+      "sequence": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        4,
+        3,
+        2,
+        1
+      ],
+      "fps": 12,
+      "loop": true,
+      "mirrorable": true,
+      "size": [
+        2560,
+        256
+      ]
+    },
+    "float": {
+      "file": "duck_float.png",
+      "mode": "air",
+      "sourceFrames": 6,
+      "sheetFrames": 6,
+      "sequence": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "fps": 12,
+      "loop": false,
+      "mirrorable": false,
+      "size": [
+        1536,
+        256
+      ]
+    },
+    "conversion": {
+      "file": "duck_conversion.png",
+      "mode": "ground",
+      "sourceFrames": 3,
+      "sheetFrames": 3,
+      "sequence": [
+        0,
+        1,
+        2
+      ],
+      "fps": 14,
+      "loop": false,
+      "mirrorable": true,
+      "size": [
+        768,
+        256
+      ]
+    },
+    "prep_start": {
+      "file": "duck_prep_start.png",
+      "mode": "ground",
+      "sourceFrames": 2,
+      "sheetFrames": 2,
+      "sequence": [
+        0,
+        1
+      ],
+      "fps": 12,
+      "loop": false,
+      "mirrorable": true,
+      "size": [
+        512,
+        256
+      ]
+    },
+    "prep_end": {
+      "file": "duck_prep_end.png",
+      "mode": "ground",
+      "sourceFrames": 3,
+      "sheetFrames": 3,
+      "sequence": [
+        0,
+        1,
+        2
+      ],
+      "fps": 12,
+      "loop": false,
+      "mirrorable": true,
+      "size": [
+        768,
+        256
+      ]
+    }
+  }
+}

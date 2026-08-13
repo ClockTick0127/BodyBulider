@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BodyBuilder 맵 에디터</title>
+<style>
+  :root {
+    --bg: #14171c; --panel: #1d222a; --panel2: #232a34; --border: #313a47;
+    --text: #e6ebf2; --muted: #8b96a5; --accent: #4c8dff; --ok: #3ecf8e;
+    --warn: #f5b942; --err: #ff6b6b; --terrain: #2f3844;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Segoe UI', 'Malgun Gothic', sans-serif; background: var(--bg);
+    color: var(--text); display: flex; flex-direction: column; overflow: hidden;
+  }
+  header {
+    display: flex; align-items: center; gap: 12px; padding: 8px 14px;
+    background: var(--panel); border-bottom: 1px solid var(--border); flex: 0 0 auto;
+  }
+  header h1 { font-size: 15px; font-weight: 600; margin-right: 8px; }
+  header .spacer { flex: 1; }
+  main { flex: 1; display: flex; min-height: 0; }
+  #toolbar {
+    width: 52px; background: var(--panel); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center; padding: 8px 0; gap: 4px; flex: 0 0 auto;
+  }
+  .tool-btn {
+    width: 40px; height: 40px; border: 1px solid transparent; border-radius: 8px;
+    background: transparent; color: var(--muted); font-size: 17px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .tool-btn:hover { background: var(--panel2); color: var(--text); }
+  .tool-btn.active { background: #2b3b55; border-color: var(--accent); color: var(--accent); }
+  #canvas-wrap { flex: 1; position: relative; min-width: 0; background: #0d0f13; }
+  #canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: crosshair; }
+  #hud {
+    position: absolute; left: 10px; bottom: 8px; font-size: 12px; color: var(--muted);
+    background: rgba(20,23,28,.75); padding: 3px 8px; border-radius: 6px; pointer-events: none;
+  }
+  #hint {
+    position: absolute; left: 50%; top: 10px; transform: translateX(-50%);
+    font-size: 12px; color: var(--text); background: rgba(20,23,28,.85);
+    padding: 4px 12px; border-radius: 6px; pointer-events: none; white-space: nowrap;
+  }
+  #sidebar {
+    width: 330px; background: var(--panel); border-left: 1px solid var(--border);
+    overflow-y: auto; flex: 0 0 auto; padding: 10px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .card { background: var(--panel2); border: 1px solid var(--border); border-radius: 10px; padding: 10px; }
+  .card h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 8px; }
+  .row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
+  .row label { font-size: 12px; color: var(--muted); min-width: 74px; }
+  input[type=number], input[type=text], select, textarea {
+    background: var(--bg); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 4px 7px; font-size: 12px;
+  }
+  input[type=number] { width: 70px; }
+  input[type=range] { flex: 1; }
+  button.btn {
+    background: var(--panel); color: var(--text); border: 1px solid var(--border);
+    border-radius: 7px; padding: 5px 10px; font-size: 12px; cursor: pointer;
+  }
+  button.btn:hover { border-color: var(--accent); color: var(--accent); }
+  button.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.btn.primary:hover { filter: brightness(1.1); color: #fff; }
+  button.btn.danger:hover { border-color: var(--err); color: var(--err); }
+  textarea.io { width: 100%; font-family: Consolas, monospace; font-size: 11px; resize: vertical; }
+  #json-io, #pose-json-io { height: 130px; }
+  #sim-json { height: 90px; margin-top: 6px; }
+  #validation div { font-size: 12px; padding: 2px 0; }
+  #validation .err::before { content: "✖ "; color: var(--err); }
+  #validation .warn::before { content: "⚠ "; color: var(--warn); }
+  #validation .ok { color: var(--ok); }
+  #sim-status { font-size: 12px; margin-top: 6px; }
+  #sim-status .success { color: var(--ok); font-weight: 600; }
+  #sim-status .fail { color: var(--err); font-weight: 600; }
+  .chk { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); cursor: pointer; }
+  #inspector .empty { font-size: 12px; color: var(--muted); }
+  details summary { font-size: 12px; color: var(--muted); cursor: pointer; }
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+    background: var(--panel2); border: 1px solid var(--border); padding: 8px 16px;
+    border-radius: 8px; font-size: 13px; z-index: 99; transition: opacity .3s; pointer-events: none;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>🗺️ BodyBuilder 맵 에디터</h1>
+  <select id="preset">
+    <option value="">프리셋 선택…</option>
+    <option value="sampleA">샘플: 대각선 상승 4인 맵</option>
+    <option value="sampleB">샘플: 평지 + 점프패드 2인</option>
+    <option value="empty">빈 맵</option>
+  </select>
+  <select id="bg-select">
+    <option value="">배경 없음</option>
+    <option value="frontend/maps/1-1_하수도_하류.png">1-1 하수도 하류</option>
+    <option value="frontend/maps/1-2_하수도_중류.png">1-2 하수도 중류</option>
+    <option value="frontend/maps/1-3_하수도_상류.png">1-3 하수도 상류</option>
+    <option value="frontend/maps/2-1_강가_하류.png">2-1 강가 하류</option>
+    <option value="frontend/maps/2-2_강가_중류.png">2-2 강가 중류</option>
+    <option value="frontend/maps/2-3_강가_상류.png">2-3 강가 상류</option>
+  </select>
+  <input type="file" id="bg-file" accept="image/*" style="display:none">
+  <button class="btn" id="bg-file-btn">배경 파일…</button>
+  <label class="chk" style="min-width:130px">투명도 <input type="range" id="bg-opacity" min="0" max="100" value="45"></label>
+  <div class="spacer"></div>
+  <button class="btn" id="undo-btn" title="Ctrl+Z">↩ 실행취소</button>
+  <button class="btn" id="redo-btn" title="Ctrl+Y">↪ 다시실행</button>
+</header>
+<main>
+  <div id="toolbar">
+    <button class="tool-btn" data-tool="select" title="선택/이동 (V)">➤</button>
+    <button class="tool-btn" data-tool="terrain" title="지형 폴리곤 그리기 (T) — 클릭으로 꼭짓점, Enter/첫점 클릭으로 닫기">⬟</button>
+    <button class="tool-btn" data-tool="start" title="시작점 배치 (S)">🔵</button>
+    <button class="tool-btn" data-tool="end" title="도착점 배치 (E)">🏁</button>
+    <button class="tool-btn" data-tool="player" title="플레이어 추가 (P) — 최대 4명">👤</button>
+    <button class="tool-btn" data-tool="jumppad" title="점프패드 (J) — 드래그로 크기 지정">⏫</button>
+    <button class="tool-btn" data-tool="pose" title="포즈(길) 그리기 (D) — ① 프레임 클릭 선택(Tab 전환) ② 클릭으로 점 추가, Enter 완료">✏️</button>
+  </div>
+  <div id="canvas-wrap">
+    <canvas id="canvas"></canvas>
+    <div id="hud"></div>
+    <div id="hint" style="display:none"></div>
+  </div>
+  <div id="sidebar">
+    <div class="card" id="inspector-card">
+      <h2>선택 항목</h2>
+      <div id="inspector"><div class="empty">항목을 선택하세요 (Delete 키로 삭제)</div></div>
+    </div>
+    <div class="card">
+      <h2>표시 옵션</h2>
+      <div class="row">
+        <label class="chk"><input type="checkbox" id="show-grid" checked> 그리드</label>
+        <label class="chk"><input type="checkbox" id="show-boxes" checked> 플레이어 영역</label>
+        <label class="chk"><input type="checkbox" id="show-poses" checked> 포즈</label>
+        <label class="chk"><input type="checkbox" id="show-oob" checked> 낙사 경계</label>
+      </div>
+    </div>
+    <div class="card">
+      <h2>유효성 검사</h2>
+      <div id="validation"></div>
+    </div>
+    <div class="card">
+      <h2>시뮬레이션</h2>
+      <div class="row"><label>서버 주소</label><input type="text" id="server-url" value="http://localhost:8080" style="flex:1"></div>
+      <div class="row" style="font-size:11px;color:var(--muted)">
+        포즈 도구(✏️)로 각 플레이어 영역에 길을 그린 뒤 실행하세요. 안 그리면 수평선이 기본 적용됩니다.
+      </div>
+      <div class="row">
+        <button class="btn primary" id="sim-run">▶ 서버 시뮬레이션</button>
+        <button class="btn" id="sim-replay" disabled>⟳ 다시재생</button>
+        <button class="btn" id="sim-clear" disabled>✕ 지우기</button>
+      </div>
+      <div class="row"><input type="range" id="sim-scrub" min="0" max="0" value="0" disabled></div>
+      <div id="sim-status"></div>
+      <details style="margin-top:8px" open>
+        <summary>결과 JSON 직접 입력해서 재생</summary>
+        <textarea id="sim-json" class="io" spellcheck="false" placeholder='{"intervalMs":30,"points":[[90,870,0,0], …],"result":true}
+프레임 배열( [[x,y,vx,vy], …] )만 붙여넣어도 됩니다.'></textarea>
+        <div class="row" style="margin-top:6px">
+          <button class="btn primary" id="sim-json-play">▶ 재생</button>
+          <input type="file" id="sim-json-file" accept=".json" style="display:none">
+          <button class="btn" id="sim-json-open">파일 열기…</button>
+        </div>
+        <div class="row" style="font-size:11px;color:var(--muted)">
+          points/frames, intervalMs/interval_ms, result/success 및 WS 페이로드 래핑을 자동 인식합니다.
+        </div>
+      </details>
+    </div>
+    <div class="card">
+      <h2>플레이어 JSON 좌표 (Bridge)</h2>
+      <textarea id="pose-json-io" class="io" spellcheck="false" placeholder='{
+  "p1Bridge": [
+    [0.09, 0.58],
+    [0.26, 0.46],
+    [0.42, 0.36],
+    [0.59, 0.37],
+    [0.75, 0.47],
+    [0.92, 0.59]
+  ],
+  "p2Bridge": [],
+  "p3Bridge": [],
+  "p4Bridge": []
+}'></textarea>
+      <div class="row" style="margin-top:6px">
+        <button class="btn primary" id="pose-json-apply">↑ 적용 (import)</button>
+        <button class="btn" id="pose-json-refresh">↓ 현재 포즈 표시</button>
+        <button class="btn" id="pose-json-copy">복사</button>
+        <button class="btn" id="pose-json-download">다운로드</button>
+        <input type="file" id="pose-json-file" accept=".json" style="display:none">
+        <button class="btn" id="pose-json-open">파일 열기…</button>
+      </div>
+      <div class="row" style="font-size:11px;color:var(--muted);margin-top:4px">
+        p1Bridge ~ p4Bridge 키 또는 2D 좌표 배열(0~1 정규화)을 입력하여 포즈를 적용합니다.
+      </div>
+    </div>
+    <div class="card">
+      <h2>JSON (map_config)</h2>
+      <textarea id="json-io" class="io" spellcheck="false"></textarea>
+      <div class="row" style="margin-top:6px">
+        <button class="btn" id="json-apply">↑ 적용 (import)</button>
+        <button class="btn" id="json-refresh">↓ 현재 맵 표시</button>
+        <button class="btn" id="json-copy">복사</button>
+        <button class="btn" id="json-download">다운로드</button>
+        <input type="file" id="json-file" accept=".json" style="display:none">
+        <button class="btn" id="json-open">파일 열기…</button>
+      </div>
+      <div class="row" style="font-size:11px;color:var(--muted);margin-top:4px">
+        WS 페이로드/round 래핑, snake_case, 레거시 스케일(0~1, 10×6)도 자동 인식합니다.
+      </div>
+    </div>
+  </div>
+</main>
+<script>
+'use strict';
+/* ============ 상수 (백엔드 GamePhysicsSimulator와 동일) ============ */
+const MAP = 1000;
+const PLAYER_W = 230, PLAYER_H = 180;
+const BALL_R = 13, ROAD_R = 4.5;
+const MAX_PLAYERS = 4;
+
+/* ============ 상태 ============ */
+let state = null;          // { startPoint, endPoint, players, terrain, gimmicks }
+let poses = [];            // per player: [[nx,ny],...] normalized 0..1 (sim 전용, map_config 아님)
+let tool = 'select';
+let selection = null;      // {kind:'start'|'end'|'player'|'pad'|'terrain', index, vertex}
+let draft = null;          // terrain drawing: [[x,y],...]
+let poseDraft = null;      // {player: i, pts: [[nx,ny],...]}
+let drag = null;
+let padDraft = null;
+let history = [], future = [];
+let sim = { frames: null, intervalMs: 30, result: null, playIdx: 0, playing: false, raf: null, t0: 0 };
+let bgImg = null;
+
+const SAMPLE_A = {
+  startPoint: [90, 870], endPoint: [870, 120],
+  players: [[170, 760], [360, 610], [580, 420], [760, 260]],
+  terrain: [
+    [[0, 920], [1000, 920], [1000, 1000], [0, 1000]],
+    [[250, 720], [460, 680], [470, 735], [260, 775]],
+    [[590, 410], [820, 360], [830, 420], [600, 470]]
+  ],
+  gimmicks: []
+};
+const SAMPLE_B = {
+  startPoint: [10, 500], endPoint: [990, 500],
+  players: [[250, 560], [700, 560]],
+  terrain: [[[0, 620], [1000, 620], [1000, 1000], [0, 1000]]],
+  gimmicks: [{ type: 'JUMP_PAD', position: [500, 600], size: [60, 20], launchVelocity: [100, -600] }]
+};
+
+/* ============ 뷰 변환 ============ */
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let view = { s: 1, ox: 0, oy: 0 };
+function fitView() {
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  const s = Math.min(w, h) / MAP * 0.94;
+  view = { s, ox: (w - MAP * s) / 2, oy: (h - MAP * s) / 2 };
+}
+function toWorld(mx, my) { return [(mx - view.ox) / view.s, (my - view.oy) / view.s]; }
+function toScreen(x, y) { return [x * view.s + view.ox, y * view.s + view.oy]; }
+
+/* ============ 히스토리 ============ */
+let lastSnap = null;
+function snapshot() { return JSON.stringify({ state, poses }); }
+function commit() {
+  if (lastSnap !== null) history.push(lastSnap);
+  if (history.length > 100) history.shift();
+  future = [];
+  lastSnap = snapshot();
+  refreshAll();
+}
+function undo() {
+  if (!history.length) return;
+  future.push(snapshot());
+  const s = JSON.parse(history.pop());
+  state = s.state; poses = s.poses; selection = null;
+  lastSnap = snapshot(); refreshAll();
+}
+function redo() {
+  if (!future.length) return;
+  history.push(snapshot());
+  const s = JSON.parse(future.pop());
+  state = s.state; poses = s.poses; selection = null;
+  lastSnap = snapshot(); refreshAll();
+}
+
+/* ============ import / export ============ */
+function extractMapConfig(j) {
+  const cands = [
+    j?.payload?.round?.mapConfig, j?.payload?.round?.map_config,
+    j?.round?.mapConfig, j?.round?.map_config,
+    j?.payload?.mapConfig, j?.payload?.map_config,
+    j?.mapConfig, j?.map_config, j?.map, j
+  ];
+  for (const c of cands) {
+    if (c && typeof c === 'object' && (c.startPoint || c.start_point)) return c;
+  }
+  return null;
+}
+function normalizeConfig(raw) {
+  const sp = raw.startPoint || raw.start_point;
+  const ep = raw.endPoint || raw.end_point;
+  const pl = raw.players || raw.player_points || [];
+  const tr = raw.terrain || raw.terrains || [];
+  const gm = raw.gimmicks || [];
+  if (!Array.isArray(sp) || sp.length < 2 || !Array.isArray(ep) || ep.length < 2)
+    throw new Error('startPoint / endPoint가 없거나 형식이 잘못되었습니다.');
+  // 레거시 스케일 감지
+  let all = [sp, ep, ...pl];
+  tr.forEach(p => Array.isArray(p) && (all = all.concat(p)));
+  const maxX = Math.max(...all.map(p => +p[0] || 0)), maxY = Math.max(...all.map(p => +p[1] || 0));
+  let fx = 1, fy = 1;
+  if (maxX <= 1.2 && maxY <= 1.2) { fx = fy = 1000; }
+  else if (maxX <= 12 && maxY <= 7.5) { fx = 100; fy = 1000 / 6; }
+  const P = p => [+(p[0] * fx).toFixed(2), +(p[1] * fy).toFixed(2)];
+  const cfg = {
+    startPoint: P(sp), endPoint: P(ep),
+    players: pl.map(P),
+    terrain: (Array.isArray(tr) ? tr : []).map(poly => poly.map(P)),
+    gimmicks: (Array.isArray(gm) ? gm : []).map(g => ({ ...g }))
+  };
+  if (fx !== 1) cfg.gimmicks.forEach(g => {
+    if (g.position) g.position = P(g.position);
+    if (g.size) g.size = [g.size[0] * fx, g.size[1] * fy];
+  });
+  return { cfg, scaled: fx !== 1 };
+}
+function exportJson() {
+  const out = {
+    startPoint: state.startPoint, endPoint: state.endPoint,
+    players: state.players, terrain: state.terrain
+  };
+  if (state.gimmicks.length) out.gimmicks = state.gimmicks;
+  return JSON.stringify(out, null, 2);
+}
+
+/* ============ 유효성 검사 ============ */
+function segIntersect(a, b, c, d) {
+  const o = (p, q, r) => Math.sign((q[0]-p[0])*(r[1]-p[1]) - (q[1]-p[1])*(r[0]-p[0]));
+  return o(a,b,c) !== o(a,b,d) && o(c,d,a) !== o(c,d,b) && o(a,b,c) !== 0 && o(c,d,a) !== 0;
+}
+function selfIntersects(poly) {
+  const n = poly.length;
+  for (let i = 0; i < n; i++) for (let j = i + 2; j < n; j++) {
+    if (i === 0 && j === n - 1) continue;
+    if (segIntersect(poly[i], poly[(i+1)%n], poly[j], poly[(j+1)%n])) return true;
+  }
+  return false;
+}
+function validate() {
+  const out = [];
+  const E = m => out.push({ l: 'err', m }), W = m => out.push({ l: 'warn', m });
+  const inMap = p => p[0] >= 0 && p[0] <= MAP && p[1] >= 0 && p[1] <= MAP;
+  if (!inMap(state.startPoint)) W('startPoint가 맵(0~1000) 밖에 있습니다.');
+  if (!inMap(state.endPoint)) W('endPoint가 맵 밖에 있습니다.');
+  if (state.endPoint[0] <= state.startPoint[0]) W('endPoint.x ≤ startPoint.x — 클리어 판정은 x 기준이라 시작하자마자 성공 처리됩니다.');
+  if (!state.players.length) E('플레이어가 없습니다 (최소 1명).');
+  if (state.players.length > MAX_PLAYERS) E(`플레이어가 ${MAX_PLAYERS}명을 초과했습니다.`);
+  state.players.forEach((p, i) => {
+    if (p[0] - PLAYER_W/2 < 0 || p[0] + PLAYER_W/2 > MAP || p[1] - PLAYER_H/2 < 0 || p[1] + PLAYER_H/2 > MAP)
+      W(`P${i+1} 영역(230×180)이 맵 밖으로 나갑니다.`);
+  });
+  state.terrain.forEach((poly, i) => {
+    if (poly.length < 3) E(`지형 #${i+1}: 꼭짓점이 3개 미만입니다 (백엔드 예외 발생).`);
+    else if (selfIntersects(poly)) E(`지형 #${i+1}: 변이 서로 교차합니다 (법선 계산 오류 유발).`);
+  });
+  state.gimmicks.forEach((g, i) => {
+    if (g.type !== 'JUMP_PAD') { W(`기믹 #${i+1} (${g.type}): 물리 미구현 — 백엔드가 무시합니다.`); return; }
+    if (!(g.size?.[0] > 0 && g.size?.[1] > 0)) E(`점프패드 #${i+1}: size는 양수여야 합니다.`);
+    if (!(g.launchVelocity?.[1] < 0)) E(`점프패드 #${i+1}: launchVelocity.y는 음수(위 방향)여야 합니다.`);
+  });
+  return out;
+}
+function renderValidation() {
+  const box = document.getElementById('validation');
+  const items = validate();
+  box.innerHTML = items.length
+    ? items.map(i => `<div class="${i.l}">${i.m}</div>`).join('')
+    : '<div class="ok">✔ 문제 없음</div>';
+}
+
+/* ============ 렌더링 ============ */
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = canvas.clientWidth * dpr;
+  canvas.height = canvas.clientHeight * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  fitView(); draw();
+}
+function poly2path(pts) {
+  ctx.beginPath();
+  pts.forEach((p, i) => {
+    const [x, y] = toScreen(p[0], p[1]);
+    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+  });
+}
+function playerBox(i) {
+  const c = state.players[i];
+  return { x: c[0] - PLAYER_W/2, y: c[1] - PLAYER_H/2, w: PLAYER_W, h: PLAYER_H };
+}
+function draw() {
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  ctx.clearRect(0, 0, W, H);
+  const [x0, y0] = toScreen(0, 0), [x1, y1] = toScreen(MAP, MAP);
+
+  // 맵 영역 배경
+  ctx.fillStyle = '#171b22';
+  ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
+  // 배경 이미지 (cover-crop, 게임 화면과 동일)
+  if (bgImg && bgImg.complete && bgImg.naturalWidth) {
+    const sc = Math.max(MAP / bgImg.naturalWidth, MAP / bgImg.naturalHeight);
+    const dw = bgImg.naturalWidth * sc, dh = bgImg.naturalHeight * sc;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(x0, y0, x1 - x0, y1 - y0); ctx.clip();
+    ctx.globalAlpha = +document.getElementById('bg-opacity').value / 100;
+    ctx.drawImage(bgImg, x0 + ((MAP - dw) / 2) * view.s, y0 + ((MAP - dh) / 2) * view.s, dw * view.s, dh * view.s);
+    ctx.restore();
+  }
+  // 그리드
+  if (document.getElementById('show-grid').checked) {
+    ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.lineWidth = 1;
+    ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.font = '10px Consolas';
+    for (let g = 0; g <= MAP; g += 100) {
+      const [gx] = toScreen(g, 0), [, gy] = toScreen(0, g);
+      ctx.beginPath(); ctx.moveTo(gx, y0); ctx.lineTo(gx, y1); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x0, gy); ctx.lineTo(x1, gy); ctx.stroke();
+      if (g < MAP) { ctx.fillText(g, gx + 2, y0 + 10); if (g > 0) ctx.fillText(g, x0 + 2, gy + 10); }
+    }
+  }
+  // 낙사 경계
+  if (document.getElementById('show-oob').checked) {
+    ctx.strokeStyle = 'rgba(255,107,107,.4)'; ctx.setLineDash([6, 5]); ctx.lineWidth = 1.5;
+    ctx.strokeRect(x0, y0, x1 - x0, y1 - y0);
+    ctx.setLineDash([]);
+  }
+  // 지형
+  state.terrain.forEach((poly, i) => {
+    poly2path(poly); ctx.closePath();
+    const sel = selection?.kind === 'terrain' && selection.index === i;
+    ctx.fillStyle = sel ? 'rgba(76,141,255,.35)' : 'rgba(47,56,68,.9)';
+    ctx.fill();
+    ctx.strokeStyle = sel ? '#4c8dff' : '#4a5668'; ctx.lineWidth = sel ? 2 : 1.2; ctx.stroke();
+    if (sel || tool === 'select') poly.forEach((p, vi) => {
+      const [vx, vy] = toScreen(p[0], p[1]);
+      ctx.beginPath(); ctx.arc(vx, vy, sel && selection.vertex === vi ? 6 : 4, 0, 7);
+      ctx.fillStyle = sel && selection.vertex === vi ? '#fff' : (sel ? '#4c8dff' : '#5a6878');
+      ctx.fill();
+    });
+  });
+  // 지형 드래프트
+  if (draft) {
+    poly2path(draft);
+    ctx.strokeStyle = '#4c8dff'; ctx.lineWidth = 2; ctx.setLineDash([5, 4]); ctx.stroke(); ctx.setLineDash([]);
+    draft.forEach((p, i) => {
+      const [vx, vy] = toScreen(p[0], p[1]);
+      ctx.beginPath(); ctx.arc(vx, vy, i === 0 ? 7 : 4, 0, 7);
+      ctx.fillStyle = i === 0 ? '#f5b942' : '#4c8dff'; ctx.fill();
+    });
+  }
+  // 플레이어 영역 + 포즈
+  state.players.forEach((c, i) => {
+    const b = playerBox(i);
+    const [bx, by] = toScreen(b.x, b.y);
+    const bw = b.w * view.s, bh = b.h * view.s;
+    const sel = selection?.kind === 'player' && selection.index === i;
+    const posing = poseDraft && poseDraft.player === i;
+    if (document.getElementById('show-boxes').checked || posing) {
+      ctx.strokeStyle = posing ? '#ff9f43' : (sel ? '#f5b942' : 'rgba(245,185,66,.55)');
+      ctx.lineWidth = posing ? 2.5 : (sel ? 2 : 1.2);
+      if (!posing) ctx.setLineDash([4, 3]);
+      ctx.strokeRect(bx, by, bw, bh); ctx.setLineDash([]);
+      if (posing) {
+        ctx.fillStyle = 'rgba(255,159,67,.08)';
+        ctx.fillRect(bx, by, bw, bh);
+      }
+      ctx.fillStyle = posing ? '#ff9f43' : (sel ? '#f5b942' : 'rgba(245,185,66,.8)');
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillText('P' + (i + 1), bx + 4, by + 14);
+    }
+    const pose = (poseDraft && poseDraft.player === i) ? poseDraft.pts : poses[i];
+    if (pose && pose.length && document.getElementById('show-poses').checked) {
+      ctx.beginPath();
+      pose.forEach((p, pi) => {
+        const [px, py] = toScreen(b.x + p[0] * b.w, b.y + p[1] * b.h);
+        pi ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+      });
+      ctx.strokeStyle = posing ? '#ff9f43' : '#3ecf8e';
+      ctx.lineWidth = Math.max(2, ROAD_R * 2 * view.s); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.globalAlpha = .85; ctx.stroke(); ctx.globalAlpha = 1;
+    }
+    const [cx, cy] = toScreen(c[0], c[1]);
+    ctx.beginPath(); ctx.arc(cx, cy, sel ? 6 : 4.5, 0, 7);
+    ctx.fillStyle = sel ? '#fff' : '#f5b942'; ctx.fill();
+  });
+  // 점프패드 (+미구현 기믹)
+  state.gimmicks.forEach((g, i) => {
+    const sel = selection?.kind === 'pad' && selection.index === i;
+    if (g.type === 'JUMP_PAD' && g.position && g.size) {
+      const [px, py] = toScreen(g.position[0] - g.size[0]/2, g.position[1] - g.size[1]/2);
+      const pw = g.size[0] * view.s, ph = g.size[1] * view.s;
+      ctx.fillStyle = sel ? 'rgba(255,159,67,.85)' : 'rgba(255,159,67,.55)';
+      ctx.fillRect(px, py, pw, ph);
+      ctx.strokeStyle = '#ff9f43'; ctx.lineWidth = sel ? 2.5 : 1.5;
+      ctx.strokeRect(px, py, pw, ph);
+      // 발사 방향 화살표
+      const v = g.launchVelocity || [0, -600];
+      const mag = Math.hypot(v[0], v[1]) || 1;
+      const [ax, ay] = toScreen(g.position[0], g.position[1]);
+      const ex = ax + v[0]/mag * 40 * view.s, ey = ay + v[1]/mag * 40 * view.s;
+      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ex, ey);
+      ctx.strokeStyle = '#ff9f43'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.beginPath(); ctx.arc(ex, ey, 3.5, 0, 7); ctx.fillStyle = '#ff9f43'; ctx.fill();
+    } else if (g.position) {
+      const [px, py] = toScreen(g.position[0], g.position[1]);
+      ctx.fillStyle = sel ? '#c56cf0' : 'rgba(197,108,240,.6)';
+      ctx.beginPath(); ctx.arc(px, py, 8, 0, 7); ctx.fill();
+      ctx.fillStyle = '#c56cf0'; ctx.font = '10px sans-serif';
+      ctx.fillText(g.type + ' (미구현)', px + 10, py + 3);
+    }
+  });
+  if (padDraft) {
+    const [px, py] = toScreen(Math.min(padDraft.x0, padDraft.x1), Math.min(padDraft.y0, padDraft.y1));
+    ctx.strokeStyle = '#ff9f43'; ctx.setLineDash([4, 3]);
+    ctx.strokeRect(px, py, Math.abs(padDraft.x1 - padDraft.x0) * view.s, Math.abs(padDraft.y1 - padDraft.y0) * view.s);
+    ctx.setLineDash([]);
+  }
+  // endPoint: 클리어 라인 + 깃발
+  {
+    const [ex, ey] = toScreen(state.endPoint[0], state.endPoint[1]);
+    ctx.strokeStyle = 'rgba(62,207,142,.5)'; ctx.setLineDash([8, 6]); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(ex, y0); ctx.lineTo(ex, y1); ctx.stroke(); ctx.setLineDash([]);
+    const sel = selection?.kind === 'end';
+    ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(ex, ey - 26); ctx.strokeStyle = sel ? '#fff' : '#3ecf8e'; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ex, ey - 26); ctx.lineTo(ex + 16, ey - 20); ctx.lineTo(ex, ey - 14); ctx.closePath();
+    ctx.fillStyle = sel ? '#fff' : '#3ecf8e'; ctx.fill();
+  }
+  // startPoint: 공
+  {
+    const [sx, sy] = toScreen(state.startPoint[0], state.startPoint[1]);
+    const sel = selection?.kind === 'start';
+    ctx.beginPath(); ctx.arc(sx, sy, BALL_R * view.s, 0, 7);
+    ctx.fillStyle = sel ? '#7fb0ff' : '#4c8dff'; ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.max(10, 13 * view.s)}px sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('S', sx, sy + 1);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  }
+  // 시뮬레이션 궤적 + 공
+  if (sim.frames) {
+    ctx.beginPath();
+    sim.frames.forEach((f, i) => {
+      const [px, py] = toScreen(f[0], f[1]);
+      i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+    });
+    ctx.strokeStyle = 'rgba(76,141,255,.45)'; ctx.lineWidth = 1.5; ctx.stroke();
+    const f = sim.frames[Math.min(sim.playIdx, sim.frames.length - 1)];
+    const [bx2, by2] = toScreen(f[0], f[1]);
+    ctx.beginPath(); ctx.arc(bx2, by2, BALL_R * view.s, 0, 7);
+    ctx.fillStyle = sim.result ? '#3ecf8e' : '#ff6b6b';
+    ctx.globalAlpha = .9; ctx.fill(); ctx.globalAlpha = 1;
+    ctx.strokeStyle = '#fff'; ctx.stroke();
+  }
+}
+
+/* ============ 히트 테스트 ============ */
+function near(p, wx, wy, r) { return Math.hypot(p[0] - wx, p[1] - wy) <= r; }
+function pointInPoly(pt, poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const a = poly[i], b = poly[j];
+    if ((a[1] > pt[1]) !== (b[1] > pt[1]) &&
+        pt[0] < (b[0] - a[0]) * (pt[1] - a[1]) / (b[1] - a[1]) + a[0]) inside = !inside;
+  }
+  return inside;
+}
+function hitTest(wx, wy) {
+  const r = 10 / view.s;
+  // 선택된 지형의 꼭짓점 우선
+  if (selection?.kind === 'terrain') {
+    const poly = state.terrain[selection.index];
+    for (let vi = 0; vi < poly.length; vi++)
+      if (near(poly[vi], wx, wy, r)) return { kind: 'terrain', index: selection.index, vertex: vi };
+  }
+  if (near(state.startPoint, wx, wy, Math.max(r, BALL_R))) return { kind: 'start' };
+  if (near(state.endPoint, wx, wy, Math.max(r, 15))) return { kind: 'end' };
+  for (let i = 0; i < state.players.length; i++)
+    if (near(state.players[i], wx, wy, r)) return { kind: 'player', index: i };
+  for (let i = 0; i < state.gimmicks.length; i++) {
+    const g = state.gimmicks[i];
+    if (!g.position) continue;
+    if (g.type === 'JUMP_PAD' && g.size) {
+      if (Math.abs(wx - g.position[0]) <= g.size[0]/2 + r/2 && Math.abs(wy - g.position[1]) <= g.size[1]/2 + r/2)
+        return { kind: 'pad', index: i };
+    } else if (near(g.position, wx, wy, r)) return { kind: 'pad', index: i };
+  }
+  for (let i = 0; i < state.terrain.length; i++) {
+    const poly = state.terrain[i];
+    for (let vi = 0; vi < poly.length; vi++)
+      if (near(poly[vi], wx, wy, r)) return { kind: 'terrain', index: i, vertex: vi };
+    if (pointInPoly([wx, wy], poly)) return { kind: 'terrain', index: i };
+  }
+  return null;
+}
+
+/* ============ 마우스 ============ */
+function clampMap(v) { return Math.max(0, Math.min(MAP, Math.round(v * 10) / 10)); }
+canvas.addEventListener('mousedown', e => {
+  if (e.button !== 0) return; // 우클릭/휠클릭은 팬 전용
+  const [wx, wy] = toWorld(e.offsetX, e.offsetY);
+  if (tool === 'terrain') {
+    if (!draft) draft = [];
+    if (draft.length >= 3 && near(draft[0], wx, wy, 12 / view.s)) { finishTerrain(); return; }
+    draft.push([clampMap(wx), clampMap(wy)]);
+    showHint('클릭: 꼭짓점 추가 · Enter/첫 점 클릭: 완료 · Esc: 취소'); draw(); return;
+  }
+  if (tool === 'start') { state.startPoint = [clampMap(wx), clampMap(wy)]; commit(); return; }
+  if (tool === 'end') { state.endPoint = [clampMap(wx), clampMap(wy)]; commit(); return; }
+  if (tool === 'player') {
+    if (state.players.length >= MAX_PLAYERS) { toast('플레이어는 최대 4명입니다.'); return; }
+    state.players.push([clampMap(wx), clampMap(wy)]);
+    poses.push(null);
+    selection = { kind: 'player', index: state.players.length - 1 };
+    commit(); return;
+  }
+  if (tool === 'jumppad') { padDraft = { x0: wx, y0: wy, x1: wx, y1: wy }; return; }
+  if (tool === 'pose') {
+    if (!poseDraft) {
+      // 1단계: 프레임 선택 — 클릭 지점을 포함하는 프레임 중 중심이 가장 가까운 것
+      const cands = state.players
+        .map((c, i) => ({ i, c, b: playerBox(i) }))
+        .filter(o => wx >= o.b.x && wx <= o.b.x + o.b.w && wy >= o.b.y && wy <= o.b.y + o.b.h)
+        .sort((a, b) => Math.hypot(wx - a.c[0], wy - a.c[1]) - Math.hypot(wx - b.c[0], wy - b.c[1]));
+      if (!cands.length) { toast('플레이어 영역(점선 박스) 안을 클릭해 프레임을 먼저 선택하세요.'); return; }
+      poseDraft = { player: cands[0].i, pts: [] };
+      selection = { kind: 'player', index: cands[0].i };
+      showHint(`P${cands[0].i + 1} 프레임 선택됨 — 클릭으로 점 추가 · Tab: 겹친 프레임 전환 · Enter: 완료 · Esc: 취소`);
+      refreshInspector(); draw(); return; // 선택 클릭은 점을 찍지 않음
+    }
+    // 2단계: 선택된 프레임에만 점 추가 (프레임 밖 클릭은 경계로 클램프)
+    const b = playerBox(poseDraft.player);
+    poseDraft.pts.push([
+      Math.max(0, Math.min(1, (wx - b.x) / b.w)),
+      Math.max(0, Math.min(1, (wy - b.y) / b.h))
+    ]);
+    showHint(`P${poseDraft.player + 1} 포즈 그리는 중 (${poseDraft.pts.length}점) · Enter: 완료 · Esc: 취소`);
+    draw(); return;
+  }
+  // select
+  const hit = hitTest(wx, wy);
+  selection = hit;
+  if (hit) {
+    drag = { hit, wx, wy, orig: snapshot() };
+    if (hit.kind === 'terrain' && hit.vertex === undefined)
+      drag.polyOrig = state.terrain[hit.index].map(p => [...p]);
+  }
+  refreshInspector(); draw();
+});
+canvas.addEventListener('mousemove', e => {
+  const [wx, wy] = toWorld(e.offsetX, e.offsetY);
+  document.getElementById('hud').textContent = `x: ${wx.toFixed(0)}  y: ${wy.toFixed(0)}  |  줌 ${(view.s).toFixed(2)}×`;
+  if (padDraft) { padDraft.x1 = wx; padDraft.y1 = wy; draw(); return; }
+  if (!drag) return;
+  const h = drag.hit, dx = wx - drag.wx, dy = wy - drag.wy;
+  if (h.kind === 'start') state.startPoint = [clampMap(wx), clampMap(wy)];
+  else if (h.kind === 'end') state.endPoint = [clampMap(wx), clampMap(wy)];
+  else if (h.kind === 'player') state.players[h.index] = [clampMap(wx), clampMap(wy)];
+  else if (h.kind === 'pad') state.gimmicks[h.index].position = [clampMap(wx), clampMap(wy)];
+  else if (h.kind === 'terrain' && h.vertex !== undefined)
+    state.terrain[h.index][h.vertex] = [clampMap(wx), clampMap(wy)];
+  else if (h.kind === 'terrain')
+    state.terrain[h.index] = drag.polyOrig.map(p => [clampMap(p[0] + dx), clampMap(p[1] + dy)]);
+  refreshInspector(false); draw();
+});
+window.addEventListener('mouseup', () => {
+  if (padDraft) {
+    const w = Math.abs(padDraft.x1 - padDraft.x0), h = Math.abs(padDraft.y1 - padDraft.y0);
+    if (w >= 5 && h >= 5) {
+      state.gimmicks.push({
+        type: 'JUMP_PAD',
+        position: [clampMap((padDraft.x0 + padDraft.x1) / 2), clampMap((padDraft.y0 + padDraft.y1) / 2)],
+        size: [Math.round(w), Math.round(h)],
+        launchVelocity: [0, -600]
+      });
+      selection = { kind: 'pad', index: state.gimmicks.length - 1 };
+      commit();
+    } else toast('드래그해서 패드 크기를 지정하세요.');
+    padDraft = null; draw(); return;
+  }
+  if (drag) {
+    const changed = drag.orig !== snapshot();
+    if (changed) {
+      history.push(drag.orig);
+      if (history.length > 100) history.shift();
+      future = []; lastSnap = snapshot();
+    }
+    drag = null; refreshAll();
+  }
+});
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const f = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+  const ns = Math.max(0.2, Math.min(8, view.s * f));
+  view.ox = e.offsetX - (e.offsetX - view.ox) * (ns / view.s);
+  view.oy = e.offsetY - (e.offsetY - view.oy) * (ns / view.s);
+  view.s = ns; draw();
+}, { passive: false });
+let pan = null;
+canvas.addEventListener('mousedown', e => { if (e.button === 1 || e.button === 2) pan = { x: e.clientX, y: e.clientY }; });
+window.addEventListener('mousemove', e => {
+  if (!pan) return;
+  view.ox += e.clientX - pan.x; view.oy += e.clientY - pan.y;
+  pan = { x: e.clientX, y: e.clientY }; draw();
+});
+window.addEventListener('mouseup', () => pan = null);
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+canvas.addEventListener('dblclick', e => {
+  // 선택된 지형 변 위 더블클릭 → 꼭짓점 추가
+  if (tool !== 'select' || selection?.kind !== 'terrain') return;
+  const [wx, wy] = toWorld(e.offsetX, e.offsetY);
+  const poly = state.terrain[selection.index];
+  for (let i = 0; i < poly.length; i++) {
+    const a = poly[i], b = poly[(i + 1) % poly.length];
+    const t = Math.max(0, Math.min(1,
+      ((wx - a[0]) * (b[0] - a[0]) + (wy - a[1]) * (b[1] - a[1])) /
+      ((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2 || 1)));
+    const px = a[0] + t * (b[0] - a[0]), py = a[1] + t * (b[1] - a[1]);
+    if (Math.hypot(wx - px, wy - py) < 8 / view.s) {
+      poly.splice(i + 1, 0, [clampMap(wx), clampMap(wy)]);
+      selection.vertex = i + 1; commit(); return;
+    }
+  }
+});
+
+/* ============ 키보드 ============ */
+function finishTerrain() {
+  if (draft && draft.length >= 3) {
+    state.terrain.push(draft);
+    selection = { kind: 'terrain', index: state.terrain.length - 1 };
+    draft = null; hideHint(); commit();
+  } else toast('꼭짓점이 3개 이상 필요합니다.');
+}
+function finishPose() {
+  if (poseDraft && poseDraft.pts.length >= 2) {
+    poses[poseDraft.player] = poseDraft.pts;
+    poseDraft = null; hideHint(); commit();
+  } else toast('포즈 점이 2개 이상 필요합니다.');
+}
+window.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+  if (e.ctrlKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
+  if (e.ctrlKey && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) { e.preventDefault(); redo(); return; }
+  if (e.key === 'Tab' && poseDraft) {
+    e.preventDefault();
+    if (poseDraft.pts.length) { toast('점을 찍기 전에만 프레임을 전환할 수 있습니다 (Esc 후 다시 선택).'); return; }
+    poseDraft.player = (poseDraft.player + 1) % state.players.length;
+    selection = { kind: 'player', index: poseDraft.player };
+    showHint(`P${poseDraft.player + 1} 프레임 선택됨 — 클릭으로 점 추가 · Tab: 프레임 전환 · Enter: 완료 · Esc: 취소`);
+    refreshInspector(); draw(); return;
+  }
+  if (e.key === 'Enter') { if (draft) finishTerrain(); else if (poseDraft) finishPose(); return; }
+  if (e.key === 'Escape') { draft = null; poseDraft = null; padDraft = null; selection = null; hideHint(); refreshAll(); return; }
+  if (e.key === 'Delete' || e.key === 'Backspace') { deleteSelection(); return; }
+  const keys = { v: 'select', t: 'terrain', s: 'start', e: 'end', p: 'player', j: 'jumppad', d: 'pose' };
+  const t = keys[e.key.toLowerCase()];
+  if (t) setTool(t);
+});
+function deleteSelection() {
+  if (!selection) return;
+  if (selection.kind === 'terrain') {
+    if (selection.vertex !== undefined && state.terrain[selection.index].length > 3) {
+      state.terrain[selection.index].splice(selection.vertex, 1);
+      selection.vertex = undefined;
+    } else state.terrain.splice(selection.index, 1), selection = null;
+  } else if (selection.kind === 'player') {
+    state.players.splice(selection.index, 1);
+    poses.splice(selection.index, 1);
+    selection = null;
+  } else if (selection.kind === 'pad') {
+    state.gimmicks.splice(selection.index, 1); selection = null;
+  } else if (selection.kind === 'start' || selection.kind === 'end') {
+    toast('시작점/도착점은 필수 항목이라 삭제할 수 없습니다. 드래그로 이동하세요.'); return;
+  }
+  commit();
+}
+
+/* ============ 도구/UI ============ */
+function setTool(t) {
+  tool = t; draft = null; poseDraft = null; hideHint();
+  document.querySelectorAll('.tool-btn').forEach(b => b.classList.toggle('active', b.dataset.tool === t));
+  const hints = {
+    terrain: '클릭: 꼭짓점 추가 · Enter/첫 점 클릭: 완료 · Esc: 취소',
+    jumppad: '드래그로 점프패드 영역을 지정하세요',
+    pose: '① 프레임 클릭으로 선택(Tab: 겹친 프레임 전환) → ② 클릭으로 점 추가 → Enter 완료',
+    player: '클릭한 위치가 플레이어 영역(230×180)의 중심이 됩니다',
+    select: '드래그: 이동 · 더블클릭(지형 변): 꼭짓점 추가 · Delete: 삭제 · 휠: 줌 · 우클릭 드래그: 이동'
+  };
+  if (hints[t]) showHint(hints[t]); else hideHint();
+  draw();
+}
+document.querySelectorAll('.tool-btn').forEach(b => b.addEventListener('click', () => setTool(b.dataset.tool)));
+function showHint(m) { const h = document.getElementById('hint'); h.textContent = m; h.style.display = 'block'; }
+function hideHint() { document.getElementById('hint').style.display = 'none'; }
+function toast(m) {
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = m;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 350); }, 2200);
+}
+
+/* ============ 인스펙터 ============ */
+function numInput(val, cb) {
+  const i = document.createElement('input');
+  i.type = 'number'; i.step = 'any'; i.value = val;
+  i.addEventListener('change', () => { cb(+i.value); commit(); });
+  return i;
+}
+function refreshInspector(rebuild = true) {
+  const box = document.getElementById('inspector');
+  if (!rebuild) return; // 드래그 중에는 재구성 생략
+  box.innerHTML = '';
+  const row = (label, ...els) => {
+    const r = document.createElement('div'); r.className = 'row';
+    const l = document.createElement('label'); l.textContent = label; r.appendChild(l);
+    els.forEach(e => r.appendChild(e)); box.appendChild(r); return r;
+  };
+  const delBtn = (fn, txt = '삭제') => {
+    const b = document.createElement('button'); b.className = 'btn danger'; b.textContent = txt;
+    b.addEventListener('click', fn); return b;
+  };
+  if (!selection) { box.innerHTML = '<div class="empty">항목을 선택하세요 (Delete 키로 삭제)</div>'; return; }
+  const s = selection;
+  if (s.kind === 'start' || s.kind === 'end') {
+    const p = s.kind === 'start' ? state.startPoint : state.endPoint;
+    box.insertAdjacentHTML('beforeend', `<div class="row"><b>${s.kind === 'start' ? '🔵 시작점' : '🏁 도착점'}</b></div>`);
+    row('x', numInput(p[0], v => p[0] = v));
+    row('y', numInput(p[1], v => p[1] = v));
+    if (s.kind === 'end') box.insertAdjacentHTML('beforeend',
+      '<div class="row" style="font-size:11px;color:var(--muted)">클리어 판정: 공.x ≥ 도착점.x (y는 표시용)</div>');
+  } else if (s.kind === 'player') {
+    const p = state.players[s.index];
+    box.insertAdjacentHTML('beforeend', `<div class="row"><b>👤 플레이어 P${s.index + 1}</b> <span style="font-size:11px;color:var(--muted)">영역 230×180 중심</span></div>`);
+    row('x', numInput(p[0], v => p[0] = v));
+    row('y', numInput(p[1], v => p[1] = v));
+    row('', delBtn(deleteSelection), delBtn(() => { poses[s.index] = null; commit(); }, '포즈 지우기'));
+  } else if (s.kind === 'pad') {
+    const g = state.gimmicks[s.index];
+    box.insertAdjacentHTML('beforeend', `<div class="row"><b>⏫ ${g.type}</b>${g.type !== 'JUMP_PAD' ? ' <span style="color:var(--warn);font-size:11px">물리 미구현</span>' : ''}</div>`);
+    if (g.position) { row('중심 x', numInput(g.position[0], v => g.position[0] = v)); row('중심 y', numInput(g.position[1], v => g.position[1] = v)); }
+    if (g.size) { row('가로', numInput(g.size[0], v => g.size[0] = v)); row('세로', numInput(g.size[1], v => g.size[1] = v)); }
+    if (g.launchVelocity) {
+      row('발사 vx', numInput(g.launchVelocity[0], v => g.launchVelocity[0] = v));
+      row('발사 vy', numInput(g.launchVelocity[1], v => g.launchVelocity[1] = v));
+      const h = Math.round((g.launchVelocity[1] ** 2) / 1440);
+      box.insertAdjacentHTML('beforeend', `<div class="row" style="font-size:11px;color:var(--muted)">예상 최대 상승 높이 ≈ ${h}px (vy²/1440)</div>`);
+    }
+    row('', delBtn(deleteSelection));
+  } else if (s.kind === 'terrain') {
+    const poly = state.terrain[s.index];
+    box.insertAdjacentHTML('beforeend', `<div class="row"><b>⬟ 지형 #${s.index + 1}</b> <span style="font-size:11px;color:var(--muted)">꼭짓점 ${poly.length}개</span></div>`);
+    if (s.vertex !== undefined) {
+      const v = poly[s.vertex];
+      row(`꼭짓점 ${s.vertex + 1} x`, numInput(v[0], nv => v[0] = nv));
+      row(`꼭짓점 ${s.vertex + 1} y`, numInput(v[1], nv => v[1] = nv));
+      row('', delBtn(deleteSelection, '꼭짓점 삭제'));
+    }
+    box.insertAdjacentHTML('beforeend', '<div class="row" style="font-size:11px;color:var(--muted)">변 위를 더블클릭하면 꼭짓점이 추가됩니다</div>');
+    const r = document.createElement('div'); r.className = 'row';
+    r.appendChild(delBtn(() => { state.terrain.splice(s.index, 1); selection = null; commit(); }, '지형 전체 삭제'));
+    box.appendChild(r);
+  }
+}
+
+/* ============ JSON UI ============ */
+function refreshJson() { document.getElementById('json-io').value = exportJson(); }
+document.getElementById('json-refresh').addEventListener('click', refreshJson);
+document.getElementById('json-apply').addEventListener('click', () => {
+  try {
+    const j = JSON.parse(document.getElementById('json-io').value);
+    const raw = extractMapConfig(j);
+    if (!raw) throw new Error('map_config를 찾을 수 없습니다.');
+    const { cfg, scaled } = normalizeConfig(raw);
+    state = cfg;
+    poses = state.players.map(() => null);
+    selection = null;
+    commit();
+    toast(scaled ? '레거시 스케일을 1000×1000으로 변환해 불러왔습니다.' : '불러오기 완료');
+  } catch (err) { toast('불러오기 실패: ' + err.message); }
+});
+document.getElementById('json-copy').addEventListener('click', () => {
+  navigator.clipboard.writeText(exportJson()).then(() => toast('클립보드에 복사했습니다.'));
+});
+document.getElementById('json-download').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([exportJson()], { type: 'application/json' }));
+  a.download = 'map_config.json'; a.click();
+});
+document.getElementById('json-open').addEventListener('click', () => document.getElementById('json-file').click());
+document.getElementById('json-file').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  f.text().then(t => {
+    document.getElementById('json-io').value = t;
+    document.getElementById('json-apply').click();
+  });
+  e.target.value = '';
+});
+
+/* ============ 플레이어 포즈 JSON UI ============ */
+function exportPoseJson() {
+  const out = {};
+  const maxP = Math.max(state ? state.players.length : 0, 4);
+  for (let i = 0; i < maxP; i++) {
+    const key = `p${i + 1}Bridge`;
+    out[key] = (poses && poses[i] && poses[i].length) ? poses[i] : [];
+  }
+  return JSON.stringify(out, null, 2);
+}
+
+function refreshPoseJson() {
+  const el = document.getElementById('pose-json-io');
+  if (el) el.value = exportPoseJson();
+}
+
+function extractPoseConfig(j) {
+  if (!j || typeof j !== 'object') return null;
+  if (Array.isArray(j)) return j;
+  const cands = [j.poses, j.payload?.poses, j.bridges, j.payload?.bridges, j];
+  for (const c of cands) {
+    if (c && typeof c === 'object') {
+      if (Array.isArray(c)) return c;
+      const keys = Object.keys(c);
+      if (keys.some(k => /^p(?:layer)?\d+/i.test(k))) return c;
+    }
+  }
+  return j;
+}
+
+function applyPoseJson() {
+  try {
+    const txt = document.getElementById('pose-json-io').value.trim();
+    if (!txt) throw new Error('JSON 코드를 입력하세요.');
+    const parsed = JSON.parse(txt);
+    const cfg = extractPoseConfig(parsed);
+    if (!cfg) throw new Error('올바른 포즈 JSON 형식이 아닙니다.');
+
+    let appliedCount = 0;
+    const maxCount = Math.max(state.players.length, 4);
+    for (let i = 0; i < maxCount; i++) {
+      let pts = null;
+      if (Array.isArray(cfg)) {
+        pts = cfg[i];
+      } else if (typeof cfg === 'object') {
+        const targetNum = i + 1;
+        for (const k of Object.keys(cfg)) {
+          const match = k.match(/^p(?:layer)?(\d+)(?:_?bridge)?$/i);
+          if (match && parseInt(match[1], 10) === targetNum) {
+            pts = cfg[k];
+            break;
+          }
+        }
+        if (!pts) {
+          pts = cfg[`p${targetNum}Bridge`] || cfg[`p${targetNum}`];
+        }
+      }
+
+      if (Array.isArray(pts)) {
+        const validPts = pts.filter(p => Array.isArray(p) && p.length >= 2 && !isNaN(+p[0]) && !isNaN(+p[1]))
+                            .map(p => [+p[0], +p[1]]);
+        if (validPts.length >= 2) {
+          poses[i] = validPts;
+          appliedCount++;
+        } else {
+          poses[i] = null;
+        }
+      }
+    }
+
+    commit();
+    toast(`플레이어 좌표 JSON 적용 완료 (${appliedCount}명 포즈 반영)`);
+  } catch (err) {
+    toast('포즈 적용 실패: ' + err.message);
+  }
+}
+
+document.getElementById('pose-json-apply').addEventListener('click', applyPoseJson);
+document.getElementById('pose-json-refresh').addEventListener('click', refreshPoseJson);
+document.getElementById('pose-json-copy').addEventListener('click', () => {
+  navigator.clipboard.writeText(exportPoseJson()).then(() => toast('클립보드에 복사했습니다.'));
+});
+document.getElementById('pose-json-download').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([exportPoseJson()], { type: 'application/json' }));
+  a.download = 'player_bridges.json'; a.click();
+});
+document.getElementById('pose-json-open').addEventListener('click', () => document.getElementById('pose-json-file').click());
+document.getElementById('pose-json-file').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  f.text().then(t => {
+    document.getElementById('pose-json-io').value = t;
+    applyPoseJson();
+  });
+  e.target.value = '';
+});
+
+/* ============ 배경 ============ */
+document.getElementById('bg-select').addEventListener('change', e => {
+  if (!e.target.value) { bgImg = null; draw(); return; }
+  bgImg = new Image();
+  bgImg.onload = draw;
+  bgImg.onerror = () => { toast('배경 로드 실패 — 이 파일을 저장소 루트(frontend 폴더 옆)에 두세요.'); bgImg = null; };
+  bgImg.src = e.target.value;
+});
+document.getElementById('bg-file-btn').addEventListener('click', () => document.getElementById('bg-file').click());
+document.getElementById('bg-file').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  bgImg = new Image(); bgImg.onload = draw;
+  bgImg.src = URL.createObjectURL(f);
+  document.getElementById('bg-select').value = '';
+});
+document.getElementById('bg-opacity').addEventListener('input', draw);
+['show-grid', 'show-boxes', 'show-poses', 'show-oob'].forEach(id =>
+  document.getElementById(id).addEventListener('change', draw));
+
+/* ============ 시뮬레이션 ============ */
+function stopSim() {
+  sim.playing = false;
+  if (sim.raf) cancelAnimationFrame(sim.raf);
+}
+function playSim() {
+  stopSim();
+  sim.playing = true; sim.playIdx = 0; sim.t0 = performance.now();
+  const step = ts => {
+    if (!sim.playing || !sim.frames) return;
+    sim.playIdx = Math.min(Math.floor((ts - sim.t0) / sim.intervalMs), sim.frames.length - 1);
+    document.getElementById('sim-scrub').value = sim.playIdx;
+    draw();
+    if (sim.playIdx < sim.frames.length - 1) sim.raf = requestAnimationFrame(step);
+    else sim.playing = false;
+  };
+  sim.raf = requestAnimationFrame(step);
+}
+// 결과 데이터 적용 (서버 응답 / 직접 입력 공용)
+function applySimResult(data, sourceLabel) {
+  sim.frames = data.frames;
+  sim.intervalMs = data.intervalMs;
+  sim.result = data.result;
+  const scrub = document.getElementById('sim-scrub');
+  scrub.max = sim.frames.length - 1; scrub.disabled = false;
+  document.getElementById('sim-replay').disabled = false;
+  document.getElementById('sim-clear').disabled = false;
+  const secs = ((sim.frames.length - 1) * sim.intervalMs / 1000).toFixed(1);
+  const st = document.getElementById('sim-status');
+  const badge = sim.result === true
+    ? '<span class="success">✔ 클리어!</span>'
+    : sim.result === false
+      ? '<span class="fail">✖ 실패</span> (낙사 또는 15초 초과)'
+      : '<span style="color:var(--muted)">결과 정보 없음</span>';
+  st.innerHTML = `${badge} · ${secs}초 · ${sim.frames.length}프레임 · ${sourceLabel}`;
+  playSim();
+}
+// 임의 JSON에서 시뮬레이션 결과 추출 (래핑/별칭 허용)
+function extractSimResult(j) {
+  // 프레임 배열만 온 경우: [[x,y,...], ...]
+  if (Array.isArray(j) && j.length && Array.isArray(j[0]) && j[0].length >= 2 && typeof j[0][0] === 'number') {
+    return { frames: j, intervalMs: 30, result: null };
+  }
+  const cands = [j, j?.payload, j?.payload?.simulation, j?.simulation, j?.data, j?.payload?.data];
+  for (const c of cands) {
+    if (!c || typeof c !== 'object') continue;
+    const frames = c.points || c.frames || c.coordinates;
+    if (Array.isArray(frames) && frames.length && Array.isArray(frames[0]) && frames[0].length >= 2) {
+      const intervalMs = c.intervalMs ?? c.interval_ms ?? c.interval ?? 30;
+      const result = c.result ?? c.success ?? null;
+      return { frames, intervalMs: +intervalMs || 30, result };
+    }
+  }
+  return null;
+}
+document.getElementById('sim-run').addEventListener('click', async () => {
+  const errs = validate().filter(v => v.l === 'err');
+  if (errs.length) { toast('유효성 오류를 먼저 해결하세요: ' + errs[0].m); return; }
+  const url = document.getElementById('server-url').value.replace(/\/+$/, '') + '/api/v1/dev/simulate';
+  const body = {
+    mapConfig: JSON.parse(exportJson()),
+    poses: state.players.map((_, i) => poses[i] && poses[i].length >= 2 ? poses[i] : [[0, 0.5], [1, 0.5]])
+  };
+  const st = document.getElementById('sim-status');
+  st.textContent = '⏳ 서버 호출 중…';
+  try {
+    const res = await fetch(url, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status + ' — ' + (await res.text()).slice(0, 200));
+    const data = await res.json();
+    applySimResult(
+      { frames: data.points, intervalMs: data.intervalMs || 30, result: data.result },
+      '서버'
+    );
+  } catch (err) {
+    st.innerHTML = `<span class="fail">요청 실패:</span> ${err.message}<br>
+      <span style="color:var(--muted);font-size:11px">백엔드가 실행 중인지, DevSimulationController가 반영된 빌드인지 확인하세요.</span>`;
+  }
+});
+document.getElementById('sim-json-play').addEventListener('click', () => {
+  const txt = document.getElementById('sim-json').value.trim();
+  if (!txt) { toast('결과 JSON을 붙여넣으세요.'); return; }
+  try {
+    const parsed = extractSimResult(JSON.parse(txt));
+    if (!parsed) throw new Error('프레임 배열(points/frames)을 찾을 수 없습니다.');
+    applySimResult(parsed, '직접 입력');
+  } catch (err) { toast('재생 실패: ' + err.message); }
+});
+document.getElementById('sim-json-open').addEventListener('click', () => document.getElementById('sim-json-file').click());
+document.getElementById('sim-json-file').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  f.text().then(t => {
+    document.getElementById('sim-json').value = t;
+    document.getElementById('sim-json-play').click();
+  });
+  e.target.value = '';
+});
+document.getElementById('sim-replay').addEventListener('click', playSim);
+document.getElementById('sim-clear').addEventListener('click', () => {
+  stopSim(); sim.frames = null;
+  document.getElementById('sim-scrub').disabled = true;
+  document.getElementById('sim-replay').disabled = true;
+  document.getElementById('sim-clear').disabled = true;
+  document.getElementById('sim-status').textContent = '';
+  draw();
+});
+document.getElementById('sim-scrub').addEventListener('input', e => {
+  stopSim(); sim.playIdx = +e.target.value; draw();
+});
+
+/* ============ 프리셋/초기화 ============ */
+document.getElementById('preset').addEventListener('change', e => {
+  const v = e.target.value; if (!v) return;
+  if (v === 'sampleA') state = JSON.parse(JSON.stringify(SAMPLE_A));
+  else if (v === 'sampleB') state = JSON.parse(JSON.stringify(SAMPLE_B));
+  else state = { startPoint: [50, 500], endPoint: [950, 500], players: [], terrain: [], gimmicks: [] };
+  poses = state.players.map(() => null);
+  selection = null; commit();
+  e.target.value = '';
+});
+document.getElementById('undo-btn').addEventListener('click', undo);
+document.getElementById('redo-btn').addEventListener('click', redo);
+
+function refreshAll() {
+  refreshInspector(); renderValidation(); refreshJson(); refreshPoseJson(); draw();
+}
+window.addEventListener('resize', resize);
+
+state = JSON.parse(JSON.stringify(SAMPLE_A));
+poses = state.players.map(() => null);
+lastSnap = snapshot();
+setTool('select');
+resize();
+refreshAll();
+</script>
+</body>
+</html>

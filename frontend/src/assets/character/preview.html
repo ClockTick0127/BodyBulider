@@ -1,0 +1,89 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>duck sprite preview</title>
+<!--
+  빌드 없이 바로 열어 보는 스프라이트 확인용 페이지다.
+  정지 이미지로는 튐과 표면 부글거림을 발견할 수 없으므로 반드시 재생 상태로 본다.
+  프레임 수·fps 는 manifest.json 에서 읽으므로 characterSheets.ts 와 자동으로 맞는다.
+-->
+<style>
+  body { margin: 0; padding: 24px; background: #1d2433; color: #e8eef7;
+         font: 14px/1.6 'Noto Sans KR', sans-serif; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  p { margin: 0 0 16px; color: #9fb0c8; font-size: 12px; }
+  label { display: inline-block; margin-bottom: 16px; margin-right: 16px; font-size: 12px; }
+  .row { display: flex; flex-wrap: wrap; gap: 20px; }
+  .card { background: #273044; border: 1px solid #3a465f; border-radius: 10px; padding: 14px; }
+  .stage { position: relative; width: 160px; height: 160px; background: #313c54;
+           border-radius: 8px; overflow: hidden; }
+  /* 빨간 선 = 접지선(216/256) · 파란 선 = 중심(128/256) */
+  .stage::after { content: ''; position: absolute; left: 0; right: 0;
+                  top: 84.375%; border-top: 1px solid rgba(255,90,90,.7); }
+  .stage::before { content: ''; position: absolute; top: 0; bottom: 0;
+                   left: 50%; border-left: 1px solid rgba(80,150,255,.5); }
+  .sprite { width: 160px; height: 160px; background-repeat: no-repeat;
+            background-size: auto 100%; background-position: 0 center; }
+  .name { margin-top: 8px; font-weight: 700; }
+  .meta { color: #9fb0c8; font-size: 11px; }
+</style>
+
+<h1>duck sprite preview</h1>
+<p>
+  접지선에서 발이 뜨거나 파고들지 않는지, 중심선 기준 몸통이 흔들리지 않는지,
+  루프가 마지막→첫 프레임에서 튀지 않는지, 1회 재생이 빈 칸이 아니라
+  마지막 프레임에 멈추는지 확인한다.
+</p>
+<label><input type="checkbox" id="slow"> 느리게 재생 (1/4 속도)</label>
+<label><input type="checkbox" id="dark"> 밝은 배경 (다크 테마 대비 확인)</label>
+
+<div class="row" id="row"></div>
+
+<script type="module">
+  const manifest = await fetch('./manifest.json').then((r) => r.json())
+  const row = document.getElementById('row')
+  const slow = document.getElementById('slow')
+  const dark = document.getElementById('dark')
+
+  const styleEl = document.createElement('style')
+  document.head.append(styleEl)
+
+  function render() {
+    const scale = slow.checked ? 4 : 1
+    row.innerHTML = ''
+    let css = ''
+
+    for (const [name, s] of Object.entries(manifest.states)) {
+      const n = s.sheetFrames
+      const duration = (n / s.fps) * scale
+      // 루프는 -(n)×폭 / steps(n), 1회 재생은 -(n-1)×폭 / steps(n, jump-none).
+      // 두 공식을 섞으면 빈 칸에 멈춘다.
+      const to = s.loop ? `-${n * 160}px` : `-${(n - 1) * 160}px`
+      const timing = s.loop ? `steps(${n})` : `steps(${n}, jump-none)`
+      const count = s.loop ? 'infinite' : '1 forwards'
+
+      css += `@keyframes k-${name} { to { background-position-x: ${to}; } }\n`
+      css += `.s-${name} { background-image: url("${s.file}");
+                animation: k-${name} ${duration}s ${timing} ${count}; }\n`
+
+      const card = document.createElement('div')
+      card.className = 'card'
+      card.innerHTML = `
+        <div class="stage"><div class="sprite s-${name}"></div></div>
+        <div class="name">${name}</div>
+        <div class="meta">${s.sourceFrames}장 → ${n}프레임 · ${s.fps}fps
+          · ${s.loop ? 'loop' : 'once'} · ${s.mode}</div>`
+      row.append(card)
+    }
+    styleEl.textContent = css
+  }
+
+  const applyTheme = () => {
+    document.body.style.background = dark.checked ? '#eef1f5' : '#1d2433'
+    document.body.style.color = dark.checked ? '#163661' : '#e8eef7'
+  }
+
+  render()
+  applyTheme()
+  slow.addEventListener('change', render)
+  dark.addEventListener('change', applyTheme)
+</script>

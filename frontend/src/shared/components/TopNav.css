@@ -1,0 +1,52 @@
+/* 최상위 네비 (모집 · 창작마당).
+   방 목록(.room-header)과 마이페이지·랭킹·창작마당(.page-topbar)이 함께 쓰므로
+   스타일을 컴포넌트가 직접 들고 있는다. 페이지 CSS에 두면 한쪽에서만 적용된다.
+   팔레트 변수는 페이지마다 이름이 달라(--blue / --room-blue) 폴백을 둔다. */
+.top-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-self: center;
+}
+
+.top-nav__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: .88rem;
+  color: #7b8aa0;
+  white-space: nowrap;
+  transition: background .15s, color .15s;
+}
+
+.top-nav__item:hover {
+  background: #e8eef7;
+  color: var(--blue, var(--room-blue, #315f9d));
+}
+
+.top-nav__item.is-active {
+  background: var(--blue, var(--room-blue, #315f9d));
+  color: #fff;
+}
+
+.top-nav__en {
+  font-size: .62rem;
+  letter-spacing: .08em;
+  opacity: .65;
+}
+
+@media (max-width: 720px) {
+  /* 좁은 화면에서는 영문 라벨을 접어 국문만 남긴다. */
+  .top-nav__en { display: none; }
+  .top-nav__item { padding-inline: 11px; }
+}
+
+@media (max-width: 480px) {
+  .top-nav { gap: 2px; }
+  .top-nav__item { padding: 6px 9px; font-size: .8rem; }
+}

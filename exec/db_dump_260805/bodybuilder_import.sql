@@ -1,0 +1,11 @@
+source bodybuilder_error_details.sql;
+source bodybuilder_flyway_schema_history.sql;
+source bodybuilder_game_round_replays.sql;
+source bodybuilder_game_sessions.sql;
+source bodybuilder_round_records.sql;
+source bodybuilder_session_events.sql;
+source bodybuilder_social_connections.sql;
+source bodybuilder_stage_records.sql;
+source bodybuilder_stage_rounds.sql;
+source bodybuilder_stages.sql;
+source bodybuilder_users.sql;
